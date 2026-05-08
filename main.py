@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from copy_audio import copy_audio
 
 def main():
     input_dir, output_dir = read_conf_file()
@@ -19,9 +20,9 @@ def read_conf_file() -> tuple[str, str]:
             # strip() removes leading and trailing characters
             # sub('', ...) replaces the matched regex pattern with an empty string
             if input_dir_pattern.search(line):
-                input_dir = input_dir_pattern.sub('', line).strip('\n \"\'')
+                input_dir = input_dir_pattern.sub('', line).strip('\n \"\'').rstrip('/\\')
             if output_dir_pattern.search(line):
-                output_dir = output_dir_pattern.sub('', line).strip('\n \"\'')
+                output_dir = output_dir_pattern.sub('', line).strip('\n \"\'').rstrip('/\\')
 
     if not input_dir or not output_dir:
         raise KeyError('Please specify both input_dir and output_dir in the configuration file')
@@ -46,10 +47,8 @@ def write_output(input_dir: str, output_dir: str) -> None:
         p_out_sub = Path(output_subfolder)
         p_out_sub.mkdir(parents=True, exist_ok=True)
 
-        # # Copy the audio and background to the output subfolder
-        # prev_audio_filenames = set()
-        # for osu_file in list(p_in_sub.glob('*.osu')):
-        #     continue
+        # Copy all the audio
+        copy_audio(p_in_sub, p_out_sub)
 
 if __name__ == '__main__':
     main()
