@@ -50,13 +50,14 @@ def copy_audio(p_in_sub: Path, p_out_sub: Path):
         if not p_out_song.is_file() and p_in_song.is_file():
             shutil.copy(p_in_song, p_out_song)
 
-            # Don't modify the metadata if the artist is various artists
-            if not is_various_artists:
+            # Fill in the metadata if it's missing 
+            f = music_tag.load_file(str(p_out_song))
+            if not f['title'].value:
                 # modify the metadata
-                f = music_tag.load_file(str(p_out_song))
-                f['title'] = title
+                f['title'] = title if not is_various_artists else version
+            if not f['artist'].value and not is_various_artists:
                 f['artist'] = artist
-                f.save()
+            f.save()
 
         # Copy the background to the output folder
         p_in_bg = Path(fr'{p_in_sub}/{bg_filename}')
