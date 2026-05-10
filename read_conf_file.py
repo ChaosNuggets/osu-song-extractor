@@ -1,3 +1,9 @@
+# Possible replacement fields are:
+# <AudioFilename>, <AudioFilenameNoExt>, <Title>, <Artist>, <Version>,
+# <BackgroundFilename>, <BackgroundFilenameNoExt>, <BeatmapID>, <BeatmapSetID>
+# Look online for the .osu file format documentation for more details about what each of these mean.
+# Ext stands for "extension"
+
 from dataclasses import dataclass, asdict
 import re
 from enum import Enum, auto
@@ -19,24 +25,14 @@ class BGExportMode(Enum):
 # Stores configuration options for each type of beatmap
 @dataclass
 class BeatmapTypeConf:
-
-# Stores all the configuraiton options
-@dataclass
-class ConfValues:
-    # input_dir is your Osu Songs folder, output_dir is where it will get copied to
-    # Make it mandatory for these two options to be in the config file,
-    # other options have defaults
-    input_dir: str = ''
-    output_dir: str = ''
-
     # When to overrite the output song metadata, based on if it's present in the original file.
     # Possible values are NEVER, IF_MISSING, ALWAYS.
-    # Default = IF_MISSING
+    # Default: IF_MISSING
     meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING
 
     # Whether or not to overrite existing files in the output directory
     # with the same filename. Possible values are True, False.
-    # Default = False
+    # Default: False
     overrite_existing_files: bool = False
 
     # How to export the background - never, as a separate file in the same directory as the output audio file,
@@ -45,20 +41,42 @@ class ConfValues:
     # Default: AS_SEPARATE
     bg_export_mode: BGExportMode = BGExportMode.AS_SEPARATE
 
+    # Whether or not to create a deeper subfolder for each audio file.
+    # Default: True for mult_bg_mult_song, False for all other beatmap types
+    export_into_deep_subfolder: bool = False
+
+    # What name to give the deeper subfolder.
+    # Supports replacement fields, see top of document for a list of all replacement fields
+    # Default: "<Version>"
+    deep_subfolder_name: str = r'<Version>'
+
+    # What name to give the exported song (program puts the audio extension for you, no need to list that)
+    # Default: <Artist> - <Title> if there's only one song,
+    #          <Artist> - <Title> [<Version>] for one_bg_mult_song, <Version> for mult_bg_mult_song
+    song_filename: str = r'<Artist> - <Title>'
+
+# Stores all the configuration options
+@dataclass
+class ConfValues:
+    # input_dir is your Osu Songs folder, output_dir is where it will get copied to
+    # Make it mandatory for these two options to be in the config file,
+    # other options have defaults
+    input_dir: str = ''
+    output_dir: str = ''
+
     # True: export each beatmap into a different subfolder
     # False: export each beatmap in the top-level output directory
-    # Default = True
+    # Default: True
     export_into_subfolders: bool = True
 
     # Name of each subfolder with support for replacement fields extracted from the beatmap's .osu file.
-    # Possible replacement fields are <AudioFilename>, <Title>, <Artist>, <Version>, <BackgroundFilename>, <BeatmapID>, <BeatmapSetID>
-    # See the .osu file format documentation online for more details about what each of these mean.
-    # Default = "<Artist> - <Title> <BeatmapSetID>"
+    # Supports replacement fields, see top of document for a list of all replacement fields
+    # Default: "<Artist> - <Title> <BeatmapSetID>"
     subfolder_name: str = r'<Artist> - <Title> <BeatmapSetID>'
 
     # Sometimes, the values in the .osu file will have illegal filename characters (<, >, :, ", /, \, |, ?, *). If you then use a
     # replacement field, this can lead to an illegal folder / file name. What should the illegal character(s) be replaced with?
-    # Default = "-"
+    # Default: "-"
     illegal_char_override: str = '-'
     
     # one_bg_one_song:
