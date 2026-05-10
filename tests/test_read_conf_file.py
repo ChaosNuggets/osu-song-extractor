@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.expanduser(r'~/Projects/Osu-Song-Extractor'))
-from main import read_conf_file
+from read_conf_file import read_conf_file
 import pytest
 
 def test_normal_cfg():
