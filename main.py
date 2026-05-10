@@ -1,32 +1,62 @@
 import re
 from pathlib import Path
 from copy_audio import copy_audio
+from dataclasses import dataclass, asdict
 
 def main():
-    input_dir, output_dir = read_conf_file()
+    input_dir, output_dir = read_conf_file('osu-song-extractor.cfg')
     write_output(input_dir, output_dir)
 
+@dataclass
+class ConfValues:
+    input_dir: str = ''
+    output_dir: str = ''
+
+    # Fills in ConfValues based on the option and value specified
+    # in the config file
+    def init_from_conf(self, option: str, value: str) -> None:
+        match option:
+            case 'input_dir':
+                self.input_dir = value.strip('\n \"\'').rstrip('/\\')
+            case 'output_dir':
+                self.output_dir = value.strip('\n \"\'').rstrip('/\\')
+            case _:
+                raise KeyError(f'Unknown config option "{option}"')
+
 # Returns the input_dir and output_dir entries in osu-song-extractor.cfg
-def read_conf_file() -> tuple[str, str]:
-    input_dir = ''
-    output_dir = ''
+def read_conf_file(conf_file: str) -> ConfValues:
+    conf_values = ConfValues()
 
     # Compiling is efficient for loops
-    input_dir_pattern = re.compile(r'^input_dir\s*=')
-    output_dir_pattern = re.compile(r'^output_dir\s*=')
+    # Pattern looks for "<config_option>=<value>" and places
+    # config option in first group and value in second group
+    conf_pattern = re.compile(r'^([^=#]*)=([^#\n]*)')
+    # input_dir_pattern = re.compile(r'^input_dir\s*=')
+    # output_dir_pattern = re.compile(r'^output_dir\s*=')
 
-    with open('osu-song-extractor.cfg', 'r') as file:
+    # Search for configuration option pattern in file
+    with open(conf_file, 'r') as file:
         for line in file:
-            # strip() removes leading and trailing characters
-            # sub('', ...) replaces the matched regex pattern with an empty string
-            if input_dir_pattern.search(line):
-                input_dir = input_dir_pattern.sub('', line).strip('\n \"\'').rstrip('/\\')
-            if output_dir_pattern.search(line):
-                output_dir = output_dir_pattern.sub('', line).strip('\n \"\'').rstrip('/\\')
+            conf_match = conf_pattern.search(line)
+            if not conf_match:
+                continue
 
-    if not input_dir or not output_dir:
-        raise KeyError('Please specify both input_dir and output_dir in the configuration file')
-    return input_dir, output_dir
+            # strip() removes leading and trailing characters
+            # parse the configuration option if there's a match
+            option = conf_match.group(1).strip()
+            value = conf_match.group(2).strip()
+            conf_values.init_from_conf(option, value)
+
+            # sub('', ...) replaces the matched regex pattern with an empty string
+            # if input_dir_pattern.search(line):
+            #     input_dir = input_dir_pattern.sub('', line).strip('\n \"\'').rstrip('/\\')
+            # if output_dir_pattern.search(line):
+            #     output_dir = output_dir_pattern.sub('', line).strip('\n \"\'').rstrip('/\\')
+
+    for key, value in asdict(conf_values).items():
+        if not value:
+            raise KeyError(f'Please specify {key} in the configuration file')
+    return conf_values
 
 # Does everything else in the program lmao
 def write_output(input_dir: str, output_dir: str) -> None:

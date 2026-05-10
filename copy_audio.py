@@ -16,7 +16,7 @@ underscore_pat = re.compile(r"'")
 extension_pat = re.compile(r'\.[^\.]+$')
 not_extension_pat = re.compile(r'^.[^\.]*')
 
-def copy_audio(p_in_sub: Path, p_out_sub: Path):
+def copy_audio(p_in_sub: Path, p_out_sub: Path) -> None:
     prev_audio_filenames = set()
     for osu_file in list(p_in_sub.glob('*.osu')):
         # extract a bunch of stuff from the .osu file
@@ -71,7 +71,8 @@ def copy_audio(p_in_sub: Path, p_out_sub: Path):
 
 # Looks at .osu file and returns audio_filename, title,
 # artist, version, and background filename (if it exists)
-def extract_beatmap_info(osu_file: Path):
+# TODO: fix type hint
+def extract_beatmap_info(osu_file: Path) -> tuple[str, str]:
     audio_filename = ''
     title = ''
     artist = ''
