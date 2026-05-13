@@ -1,10 +1,10 @@
 # Possible replacement fields are:
-# <AudioFilename>, <AudioFilenameNoExt>, <Title>, <Artist>, <Version>,
-# <BackgroundFilename>, <BackgroundFilenameNoExt>, <BeatmapID>, <BeatmapSetID>
+# <AudioFilename>, <Title>, <Artist>, <Version>,
+# <BackgroundFilename>, <BeatmapID>, <BeatmapSetID>
 # Look online for the .osu file format documentation for more details about what each of these mean.
-# Ext stands for "extension"
+# The program automatically strips the extension for folders and adds the correct extension for filenames
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 import re
 from enum import Enum, auto
 
@@ -25,22 +25,6 @@ class BGExportMode(Enum):
 # Stores configuration options for each type of beatmap
 @dataclass
 class BeatmapTypeConf:
-    # When to overrite the output song metadata, based on if it's present in the original file.
-    # Possible values are NEVER, IF_MISSING, ALWAYS.
-    # Default: IF_MISSING
-    meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING
-
-    # Whether or not to overrite existing files in the output directory
-    # with the same filename. Possible values are True, False.
-    # Default: False
-    overrite_existing_files: bool = False
-
-    # How to export the background - never, as a separate file in the same directory as the output audio file,
-    # or as part of the output file's metadata.
-    # Possible values are NEVER, AS_SEPARATE, AS_META
-    # Default: AS_SEPARATE
-    bg_export_mode: BGExportMode = BGExportMode.AS_SEPARATE
-
     # Whether or not to create a deeper subfolder for each audio file.
     # Default: True for mult_bg_mult_song, False for all other beatmap types
     export_into_deep_subfolder: bool = False
@@ -50,10 +34,40 @@ class BeatmapTypeConf:
     # Default: "<Version>"
     deep_subfolder_name: str = r'<Version>'
 
+    # Whether or not to overrite existing files in the output directory
+    # with the same filename. Possible values are True, False.
+    # Default: False
+    overrite_existing_files: bool = False
+
     # What name to give the exported song (program puts the audio extension for you, no need to list that)
-    # Default: <Artist> - <Title> if there's only one song,
-    #          <Artist> - <Title> [<Version>] for one_bg_mult_song, <Version> for mult_bg_mult_song
+    # Default: "<Artist> - <Title>" if there's only one song,
+    #          "<Artist> - <Title> [<Version>]" for one_bg_mult_song, "<Version>" for mult_bg_mult_song
     song_filename: str = r'<Artist> - <Title>'
+
+    # When to overrite the output song metadata, based on if it's present in the original file.
+    # Possible values are NEVER, IF_MISSING, ALWAYS.
+    # Default: IF_MISSING
+    meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING 
+
+    # What metadata to write to the exported song's title field.
+    # Default: "<Title>" for one_bg_one_song and mult_bg_one_song,
+    #          "<Title> [<Version>]" for one_bg_mult_song, "<Version>" for mult_bg_mult_song
+    title_meta: str = r'<Title>'
+
+    # What metadata to write to the exported song's artist field.
+    # Default: "<Artist>" for everything besides mult_bg_mult_song,
+    # "" for mult_bg_mult_song (blank string means don't modify this field)
+    artist_meta: str = r'<Artist>'
+
+    # How to export the background - never, as a separate file in the same directory as the output audio file,
+    # or as part of the output file's metadata.
+    # Possible values are NEVER, AS_SEPARATE, AS_META
+    # Default: AS_SEPARATE
+    bg_export_mode: BGExportMode = BGExportMode.AS_SEPARATE
+    
+    # What name to give the exported background image (if exporting as separate file)
+    # Default: <BackgroundFilename>
+    bg_filename: str = r'<BackgroundFilename>'
 
 # Stores all the configuration options
 @dataclass
@@ -79,10 +93,21 @@ class ConfValues:
     # Default: "-"
     illegal_char_override: str = '-'
     
-    # one_bg_one_song:
-    # mult_bg_one_song = 
-    # one_bg_mult_song = 
-    # mult_bg_mult_song =
+    # The configuration options specific to all 4 beatmap types
+    one_bg_one_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
+    mult_bg_one_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
+    one_bg_mult_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
+    mult_bg_mult_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
+
+    # Fills in the special defaults for one_bg_mult_song and mult_bg_mult_song
+    def __post_init__(self):
+        self.one_bg_mult_song.song_filename = r'<Artist> - <Title> [<Version>]'
+        self.one_bg_mult_song.title_meta = r'<Title> [<Version>]'
+
+        self.mult_bg_mult_song.export_into_deep_subfolder = True
+        self.mult_bg_mult_song.song_filename = r'<Version>'
+        self.mult_bg_mult_song.title_meta = r'<Version>'
+        self.mult_bg_mult_song.artist_meta = r''
 
     # Fills in ConfValues based on the option and value specified
     # in the config file
