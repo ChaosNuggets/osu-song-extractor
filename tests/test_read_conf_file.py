@@ -43,7 +43,7 @@ def test_defaults():
     assert conf.one_bg_one_song.song_filename == r'<Artist> - <Title>'
     assert conf.mult_bg_one_song.song_filename == r'<Artist> - <Title>'
     assert conf.one_bg_mult_song.song_filename == r'<Artist> - <Title> [<Version>]'
-    assert conf.mult_bg_mult_song.song_filename == r'<Version>'
+    assert conf.mult_bg_mult_song.song_filename == r'<Artist> - <Version>'
 
     assert conf.one_bg_one_song.meta_write_mode == MetaWriteMode.IF_MISSING 
     assert conf.mult_bg_one_song.meta_write_mode == MetaWriteMode.IF_MISSING 

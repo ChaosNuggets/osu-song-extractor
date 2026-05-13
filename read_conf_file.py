@@ -41,7 +41,7 @@ class BeatmapTypeConf:
 
     # What name to give the exported song (program puts the audio extension for you, no need to list that)
     # Default: "<Artist> - <Title>" if there's only one song,
-    #          "<Artist> - <Title> [<Version>]" for one_bg_mult_song, "<Version>" for mult_bg_mult_song
+    #          "<Artist> - <Title> [<Version>]" for one_bg_mult_song, "<Artist> - <Version>" for mult_bg_mult_song
     song_filename: str = r'<Artist> - <Title>'
 
     # When to overrite the output song metadata, based on if it's present in the original file.
@@ -104,7 +104,7 @@ class ConfValues:
         self.one_bg_mult_song.title_meta = r'<Title> [<Version>]'
 
         self.mult_bg_mult_song.export_into_deep_subfolder = True
-        self.mult_bg_mult_song.song_filename = r'<Version>'
+        self.mult_bg_mult_song.song_filename = r'<Artist> - <Version>'
         self.mult_bg_mult_song.title_meta = r'<Version>'
 
     # Fills in ConfValues based on the option and value specified
