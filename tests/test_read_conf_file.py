@@ -58,7 +58,7 @@ def test_defaults():
     assert conf.one_bg_one_song.artist_meta == r'<Artist>'
     assert conf.mult_bg_one_song.artist_meta == r'<Artist>'
     assert conf.one_bg_mult_song.artist_meta == r'<Artist>'
-    assert conf.mult_bg_mult_song.artist_meta == r''
+    assert conf.mult_bg_mult_song.artist_meta == r'<Artist>'
 
     assert conf.one_bg_one_song.bg_export_mode == BGExportMode.AS_SEPARATE
     assert conf.mult_bg_one_song.bg_export_mode == BGExportMode.AS_SEPARATE

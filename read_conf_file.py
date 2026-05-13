@@ -55,8 +55,7 @@ class BeatmapTypeConf:
     title_meta: str = r'<Title>'
 
     # What metadata to write to the exported song's artist field.
-    # Default: "<Artist>" for everything besides mult_bg_mult_song,
-    # "" for mult_bg_mult_song (blank string means don't modify this field)
+    # Default: "<Artist>"
     artist_meta: str = r'<Artist>'
 
     # How to export the background - never, as a separate file in the same directory as the output audio file,
@@ -107,16 +106,15 @@ class ConfValues:
         self.mult_bg_mult_song.export_into_deep_subfolder = True
         self.mult_bg_mult_song.song_filename = r'<Version>'
         self.mult_bg_mult_song.title_meta = r'<Version>'
-        self.mult_bg_mult_song.artist_meta = r''
 
     # Fills in ConfValues based on the option and value specified
     # in the config file
     def init_from_conf(self, option: str, value: str) -> None:
         match option:
             case 'input_dir':
-                self.input_dir = value.strip('\n \"\'').rstrip('/\\')
+                self.input_dir = value.strip('\n \"').rstrip('/\\')
             case 'output_dir':
-                self.output_dir = value.strip('\n \"\'').rstrip('/\\')
+                self.output_dir = value.strip('\n \"').rstrip('/\\')
             case _:
                 raise KeyError(f'Unknown config option "{option}"')
 
