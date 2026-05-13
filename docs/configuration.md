@@ -1,6 +1,10 @@
 # Configuration Guide
 The configuration file is called osu-song-extractor.cfg. This is the documentation for that file.
 
+# Table of Contents
+1. [Configuration Options](#configuration-options)
+2. [Replacement Fields](#replacement-fields)
+
 # Configuration Options
 There are 5 section headers:
 
