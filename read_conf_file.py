@@ -1,12 +1,9 @@
-# Possible replacement fields are:
-# <AudioFilename>, <Title>, <Artist>, <Version>,
-# <BackgroundFilename>, <BeatmapID>, <BeatmapSetID>
-# Look online for the .osu file format documentation for more details about what each of these mean.
-# The program automatically strips the extension for folders and adds the correct extension for filenames
-
 from dataclasses import dataclass, asdict, field
 import re
 from enum import Enum, auto
+
+# Looks for something surrounded by quotation marks and puts it into group 1
+string_pattern = re.compile(r'"(.*)"')
 
 # Enum that stores whether the user wants to always write the song metadata,
 # write the metadata only if missing, or never write the metadata
@@ -22,77 +19,62 @@ class BGExportMode(Enum):
     AS_SEPARATE = auto()
     AS_META = auto()
 
-# Stores configuration options for each type of beatmap
+# Stores configuration options for a specific type of beatmap. See the "[x_bg_x_song] Options" section in docs/configuration.md for more info.
 @dataclass
 class BeatmapTypeConf:
-    # Whether or not to create a deeper subfolder for each audio file.
-    # Default: True for mult_bg_mult_song, False for all other beatmap types
     export_into_deep_subfolder: bool = False
-
-    # What name to give the deeper subfolder.
-    # Supports replacement fields, see top of document for a list of all replacement fields
-    # Default: "<Version>"
     deep_subfolder_name: str = r'<Version>'
-
-    # Whether or not to overrite existing files in the output directory
-    # with the same filename. Possible values are True, False.
-    # Default: False
     overrite_existing_files: bool = False
-
-    # What name to give the exported song (program puts the audio extension for you, no need to list that)
-    # Default: "<Artist> - <Title>" if there's only one song,
-    #          "<Artist> - <Title> [<Version>]" for one_bg_mult_song, "<Artist> - <Version>" for mult_bg_mult_song
     song_filename: str = r'<Artist> - <Title>'
-
-    # When to overrite the output song metadata, based on if it's present in the original file.
-    # Possible values are NEVER, IF_MISSING, ALWAYS.
-    # Default: IF_MISSING
     meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING 
-
-    # What metadata to write to the exported song's title field.
-    # Default: "<Title>" for one_bg_one_song and mult_bg_one_song,
-    #          "<Title> [<Version>]" for one_bg_mult_song, "<Version>" for mult_bg_mult_song
     title_meta: str = r'<Title>'
-
-    # What metadata to write to the exported song's artist field.
-    # Default: "<Artist>"
     artist_meta: str = r'<Artist>'
-
-    # How to export the background - never, as a separate file in the same directory as the output audio file,
-    # or as part of the output file's metadata.
-    # Possible values are NEVER, AS_SEPARATE, AS_META
-    # Default: AS_SEPARATE
     bg_export_mode: BGExportMode = BGExportMode.AS_SEPARATE
-    
-    # What name to give the exported background image (if exporting as separate file)
-    # Default: <BackgroundFilename>
     bg_filename: str = r'<BackgroundFilename>'
 
-# Stores all the configuration options
+    # Parse option and modify the correct member variables for the [x_bg_x_song] sections
+    def init_from_conf(self, option: str, value: str) -> None:
+        match option:
+            case 'export_into_deep_subfolder':
+                self.export_into_deep_subfolder = parse_bool(value)
+            case 'deep_subfolder_name':
+                self.deep_subfolder_name = parse_string(value)
+            case 'overrite_existing_files':
+                self.overrite_existing_files = parse_bool(value)
+            case 'song_filename':
+                self.song_filename = parse_string(value)
+            case 'meta_write_mode':
+                self.meta_write_mode = parse_enum(value, MetaWriteMode)
+            case 'title_meta':
+                self.title_meta = parse_string(value)
+            case 'artist_meta':
+                self.artist_meta = parse_string(value)
+            case 'bg_export_mode':
+                self.bg_export_mode = parse_enum(value, BGExportMode)
+            case 'bg_filename':
+                self.bg_filename = parse_string(value)
+            case _:
+                raise KeyError(f'Unknown configuration option "{option}" in section [x_bg_x_song]')
+
+# The different sections of the configuration file
+class ConfSection(Enum):
+    GENERAL = auto()
+    ONE_BG_ONE_SONG = auto()
+    MULT_BG_ONE_SONG = auto()
+    ONE_BG_MULT_SONG = auto()
+    MULT_BG_MULT_SONG = auto()
+
+# Stores all the configuration options. See the "Configuration Options" section in docs/configuration.md for more info.
 @dataclass
 class ConfValues:
-    # input_dir is your Osu Songs folder, output_dir is where it will get copied to
-    # Make it mandatory for these two options to be in the config file,
-    # other options have defaults
+    # General configuration options. See the "[General] Options" section in docs/configuration.md for more info.
     input_dir: str = ''
     output_dir: str = ''
-
-    # True: export each beatmap into a different subfolder
-    # False: export each beatmap in the top-level output directory
-    # Default: True
     export_into_subfolders: bool = True
-
-    # Name of each subfolder with support for replacement fields extracted from the beatmap's .osu file.
-    # Supports replacement fields, see top of document for a list of all replacement fields
-    # Default: "<Artist> - <Title> <BeatmapSetID>"
     subfolder_name: str = r'<Artist> - <Title> <BeatmapSetID>'
-
-    # Sometimes, the values in the .osu file will have illegal filename characters (<, >, :, ", /, \, |, ?, *). If you then use a
-    # replacement field, this can lead to an illegal folder / file name. What should the illegal character(s) be replaced with?
-    # Default: "-"
     illegal_char_override: str = '-'
-    
-    # The configuration options specific to all 4 beatmap types
+
+    # Configuration options for each type of beatmap. 
     one_bg_one_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
     mult_bg_one_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
     one_bg_mult_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
@@ -109,14 +91,67 @@ class ConfValues:
 
     # Fills in ConfValues based on the option and value specified
     # in the config file
-    def init_from_conf(self, option: str, value: str) -> None:
+    def init_from_conf(self, option: str, value: str, section: ConfSection) -> None:
+        # Parse section so we modify the correct BeatmapTypeConf instance
+        match section:
+            case ConfSection.ONE_BG_ONE_SONG:
+                x_bg_x_song = self.one_bg_one_song
+            case ConfSection.MULT_BG_ONE_SONG:
+                x_bg_x_song = self.mult_bg_one_song
+            case ConfSection.ONE_BG_MULT_SONG:
+                x_bg_x_song = self.one_bg_mult_song
+            case ConfSection.MULT_BG_MULT_SONG:
+                x_bg_x_song = self.mult_bg_mult_song
+            case _:
+                x_bg_x_song = None
+
+        # Call the correct initialization function based on section
+        if x_bg_x_song == None:
+            init_general_conf(option, value)
+        else:
+            x_bg_x_song.init_from_conf(option, value)
+
+    # Parse option and modify the correct member variables for the General section
+    def init_general_conf(self, option: str, value: str) -> None:
         match option:
             case 'input_dir':
-                self.input_dir = value.strip('\n \"').rstrip('/\\')
+                self.input_dir = parse_string(value).rstrip('/\\')
             case 'output_dir':
-                self.output_dir = value.strip('\n \"').rstrip('/\\')
+                self.output_dir = parse_string(value).rstrip('/\\')
+            case 'export_into_subfolders':
+                self.export_into_subfolders = parse_bool(value)
+            case 'subfolder_name':
+                self.subfolder_name = parse_string(value)
+            case 'illegal_char_override':
+                    self.illegal_char_override = parse_string(value)
             case _:
-                raise KeyError(f'Unknown config option "{option}"')
+                raise KeyError(fr'Unknown configuration option "{option}" in section [General]')
+
+# Strips the string of its quotation marks
+def parse_string(value: str) -> str:
+    string_match = string_pattern.search()
+    if string_match:
+        return string_match.group(1)
+
+    return value.strip('\n\r\t \"')
+
+# Turns a string ("True" or "False") into a bool
+def parse_bool(value: str) -> bool:
+    match value.strip().lower():
+        case 'true':
+            return True
+        case 'false':
+            return False
+        case _:
+            raise ValueError(f'Cannot parse {value} as bool')
+
+# Turns a string into an enum member
+def parse_enum(value: str, EnumCls: type[Enum]) -> Enum:
+    for member in EnumCls:
+        if value.strip().lower() == member.name.lower():
+            return member
+
+    raise ValueError(f'Cannot parse {value} as {EnumCls}')
 
 # Returns the input_dir and output_dir entries in osu-song-extractor.cfg
 def read_conf_file(conf_file: str) -> ConfValues:
@@ -137,6 +172,7 @@ def read_conf_file(conf_file: str) -> ConfValues:
             # Parse the configuration option
             option = conf_match.group(1).strip()
             value = conf_match.group(2).strip()
+            # TODO: add section code here
             conf_values.init_from_conf(option, value)
 
     # Raise an error if something is missing from the config file

@@ -22,7 +22,7 @@ def test_missing_key_cfg():
     with pytest.raises(KeyError):
         conf_values = read_conf_file('tests/missing-key.cfg')
 
-def test_defaults():
+def test_default_cfg():
     conf = read_conf_file(r'tests/normal-test.cfg')
     assert conf.export_into_subfolders == True
     assert conf.subfolder_name == r'<Artist> - <Title> <BeatmapSetID>'
@@ -69,3 +69,30 @@ def test_defaults():
     assert conf.mult_bg_one_song.bg_filename == r'<BackgroundFilename>'
     assert conf.one_bg_mult_song.bg_filename == r'<BackgroundFilename>'
     assert conf.mult_bg_mult_song.bg_filename == r'<BackgroundFilename>'
+
+def test_custom_cfg():
+    conf = read_conf_file(r'tests/custom.cfg')
+    assert conf.input_dir == r"C:\Users\chaos\AppData\Local\osu!\Songs"
+    assert conf.output_dir == r"C:\Users\chaos\Music\Extracted-Songs"
+    assert conf.export_into_subfolders == True
+    assert conf.subfolder_name == r"<Artist> - <Title> <BeatmapSetID>"
+    assert conf.illegal_char_override == "-"
+
+    assert conf.one_bg_one_song.export_into_deep_subfolder == False
+    assert conf.one_bg_one_song.deep_subfolder_name == r"<Version>"
+    assert conf.one_bg_one_song.overrite_existing_files == False
+    assert conf.one_bg_one_song.song_filename == r"<Artist> - <Title>"
+    assert conf.one_bg_one_song.meta_write_mode == MetaWriteMode.IF_MISSING 
+    assert conf.one_bg_one_song.title_meta == r"<Title>"
+    assert conf.one_bg_one_song.artist_meta == r"<Artist>"
+    assert conf.one_bg_one_song.bg_export_mode == BGExportMode.AS_SEPARATE
+    assert conf.one_bg_one_song.bg_filename == r"<BackgroundFilename>"
+
+    assert conf.mult_bg_one_song.export_into_deep_subfolder == True
+    assert conf.mult_bg_one_song.deep_subfolder_name == r"<AudioFilename>"
+    assert conf.mult_bg_one_song.overrite_existing_files == True
+    assert conf.mult_bg_one_song.song_filename == r" <BackgroundFilename> <BeatmapID>"
+    assert conf.mult_bg_one_song.meta_write_mode == MetaWriteMode.ALWAYS
+    assert conf.mult_bg_one_song.title_meta == r"EEE <ooga booga>"
+    assert conf.mult_bg_one_song.artist_meta == r"< lol"
+    assert conf.mult_bg_one_song.bg_export_mode == BGExportMode.AS_META
