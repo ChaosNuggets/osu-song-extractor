@@ -107,7 +107,7 @@ class ConfValues:
 
         # Call the correct initialization function based on section
         if x_bg_x_song == None:
-            init_general_conf(option, value)
+            self.init_general_conf(option, value)
         else:
             x_bg_x_song.init_from_conf(option, value)
 
@@ -127,9 +127,49 @@ class ConfValues:
             case _:
                 raise KeyError(fr'Unknown configuration option "{option}" in section [General]')
 
+
+
+# Returns the input_dir and output_dir entries in osu-song-extractor.cfg
+def read_conf_file(conf_file: str) -> ConfValues:
+    conf_values = ConfValues()
+
+    # Compiling is efficient for loops
+    # Pattern looks for "<config_option>=<value>" and places
+    # config option in first group and value in second group
+    conf_pattern = re.compile(r'^([^=#]*)=([^#\n]*)')
+
+    # Looks for something surrounded by square brackets [] and puts the inside text into group 1
+    section_pattern = re.compile(r'^\[(.*)\]')
+
+    # Read configuration file
+    with open(conf_file, 'r') as file:
+        section = ConfSection.GENERAL
+        for line in file:
+            # Search for section header pattern in file
+            section_match = section_pattern.search(line)
+            if section_match:
+                section = parse_enum(section_match.group(1), ConfSection)
+                continue
+
+            # Search for configuration option pattern in file
+            conf_match = conf_pattern.search(line)
+            if not conf_match:
+                continue
+
+            # Parse the configuration option
+            option = conf_match.group(1).strip()
+            value = conf_match.group(2).strip()
+            conf_values.init_from_conf(option, value, section)
+
+    # Raise an error if something is missing from the config file
+    for key, value in asdict(conf_values).items():
+        if not value:
+            raise KeyError(f'Please specify {key} in the configuration file')
+    return conf_values
+
 # Strips the string of its quotation marks
 def parse_string(value: str) -> str:
-    string_match = string_pattern.search()
+    string_match = string_pattern.search(value)
     if string_match:
         return string_match.group(1)
 
@@ -152,31 +192,3 @@ def parse_enum(value: str, EnumCls: type[Enum]) -> Enum:
             return member
 
     raise ValueError(f'Cannot parse {value} as {EnumCls}')
-
-# Returns the input_dir and output_dir entries in osu-song-extractor.cfg
-def read_conf_file(conf_file: str) -> ConfValues:
-    conf_values = ConfValues()
-
-    # Compiling is efficient for loops
-    # Pattern looks for "<config_option>=<value>" and places
-    # config option in first group and value in second group
-    conf_pattern = re.compile(r'^([^=#]*)=([^#\n]*)')
-
-    # Search for configuration option pattern in file
-    with open(conf_file, 'r') as file:
-        for line in file:
-            conf_match = conf_pattern.search(line)
-            if not conf_match:
-                continue
-
-            # Parse the configuration option
-            option = conf_match.group(1).strip()
-            value = conf_match.group(2).strip()
-            # TODO: add section code here
-            conf_values.init_from_conf(option, value)
-
-    # Raise an error if something is missing from the config file
-    for key, value in asdict(conf_values).items():
-        if not value:
-            raise KeyError(f'Please specify {key} in the configuration file')
-    return conf_values
