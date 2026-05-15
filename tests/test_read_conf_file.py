@@ -14,9 +14,9 @@ def test_many_spaces_cfg():
     assert conf_values.input_dir == '~/Music/Songs'
     assert conf_values.output_dir == r'~\Music\Extracted-Songs'
 
-def test_invalid_key_cfg():
+def test_invalid_general_key_cfg():
     with pytest.raises(KeyError):
-        conf_values = read_conf_file('tests/invalid-key.cfg')
+        conf_values = read_conf_file('tests/invalid-general-key.cfg')
 
 def test_missing_key_cfg():
     with pytest.raises(KeyError):
@@ -100,3 +100,15 @@ def test_custom_cfg():
     assert conf.one_bg_mult_song.song_filename == r"<BeatmapSetID> <BeatmapID>"
     
     assert conf.mult_bg_mult_song.song_filename == r"<AudioFilename>"
+
+def test_invalid_x_bg_x_song_key_cfg():
+    with pytest.raises(KeyError):
+        conf_values = read_conf_file('tests/invalid-x_bg_x_song-key.cfg')
+
+def test_invalid_bool_cfg():
+    with pytest.raises(ValueError):
+        conf_values = read_conf_file('tests/invalid-bool.cfg')
+
+def test_invalid_enum_cfg():
+    with pytest.raises(ValueError):
+        conf_values = read_conf_file('tests/invalid-enum.cfg')
