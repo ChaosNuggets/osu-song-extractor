@@ -17,7 +17,8 @@ class MetaWriteMode(Enum):
 class BGExportMode(Enum):
     NEVER = auto()
     AS_SEPARATE = auto()
-    AS_META = auto()
+    AS_META_IF_MISSING = auto()
+    AS_META_ALWAYS = auto()
 
 # Stores configuration options for a specific type of beatmap. See the "[x_bg_x_song] Options" section in docs/configuration.md for more info.
 @dataclass

@@ -77,7 +77,8 @@ Default: `"<Artist>"`
 How to export the background. \
 `NEVER`: Don't export the background. \
 `AS_SEPARATE`: Export as a separate file in the same directory as the output audio file. \
-`AS_META`: Export as part of the output file's metadata. \
+`AS_META_IF_MISSING`: Export as part of the output file's metadata only if it's missing from the original audio file. \
+`AS_META_ALWAYS`: Export as part of the output file's metadata even if it already exists in the original audio file. \
 Default: `AS_SEPARATE`
 
 ### bg\_filename

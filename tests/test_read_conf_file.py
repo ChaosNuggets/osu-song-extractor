@@ -95,4 +95,8 @@ def test_custom_cfg():
     assert conf.mult_bg_one_song.meta_write_mode == MetaWriteMode.ALWAYS
     assert conf.mult_bg_one_song.title_meta == r"EEE <ooga booga>"
     assert conf.mult_bg_one_song.artist_meta == r"< lol"
-    assert conf.mult_bg_one_song.bg_export_mode == BGExportMode.AS_META
+    assert conf.mult_bg_one_song.bg_export_mode == BGExportMode.AS_META_IF_MISSING
+
+    assert conf.one_bg_mult_song.song_filename == r"<BeatmapSetID> <BeatmapID>"
+    
+    assert conf.mult_bg_mult_song.song_filename == r"<AudioFilename>"
