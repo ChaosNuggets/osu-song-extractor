@@ -1,9 +1,7 @@
 from dataclasses import dataclass, asdict, field
 import re
 from enum import Enum, auto
-
-# Looks for something surrounded by quotation marks and puts it into group 1
-string_pattern = re.compile(r'"(.*)"')
+from parse_utils import parse_string, parse_bool, parse_enum
 
 # Enum that stores whether the user wants to always write the song metadata,
 # write the metadata only if missing, or never write the metadata
@@ -128,8 +126,6 @@ class ConfValues:
             case _:
                 raise KeyError(fr'Unknown configuration option "{option}" in section [General]')
 
-
-
 # Returns the input_dir and output_dir entries in osu-song-extractor.cfg
 def read_conf_file(conf_file: str) -> ConfValues:
     conf_values = ConfValues()
@@ -137,7 +133,7 @@ def read_conf_file(conf_file: str) -> ConfValues:
     # Compiling is efficient for loops
     # Pattern looks for "<config_option>=<value>" and places
     # config option in first group and value in second group
-    conf_pattern = re.compile(r'^([^=#]*)=([^#\n]*)')
+    conf_pattern = re.compile(r'^([^=#\n\r]*)=([^#\n\r]*)')
 
     # Looks for something surrounded by square brackets [] and puts the inside text into group 1
     section_pattern = re.compile(r'^\[(.*)\]')
@@ -162,34 +158,8 @@ def read_conf_file(conf_file: str) -> ConfValues:
             value = conf_match.group(2).strip()
             conf_values.init_from_conf(option, value, section)
 
-    # Raise an error if something is missing from the config file
+    # Raise an error if options with no defaults are missing from the config file
     for key, value in asdict(conf_values).items():
         if not value:
             raise KeyError(f'Please specify {key} in the configuration file')
     return conf_values
-
-# Strips the string of its quotation marks
-def parse_string(value: str) -> str:
-    string_match = string_pattern.search(value)
-    if string_match:
-        return string_match.group(1)
-
-    return value.strip('\n\r\t \"')
-
-# Turns a string ("True" or "False") into a bool
-def parse_bool(value: str) -> bool:
-    match value.strip().lower():
-        case 'true':
-            return True
-        case 'false':
-            return False
-        case _:
-            raise ValueError(f'Cannot parse {value} as bool')
-
-# Turns a string into an enum member
-def parse_enum(value: str, EnumCls: type[Enum]) -> Enum:
-    for member in EnumCls:
-        if value.strip().lower() == member.name.lower():
-            return member
-
-    raise ValueError(f'Cannot parse {value} as {EnumCls}')

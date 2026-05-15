@@ -1,6 +1,3 @@
-import sys
-import os
-sys.path.append(os.path.expanduser(r'~/Projects/Osu-Song-Extractor'))
 from read_conf_file import read_conf_file, MetaWriteMode, BGExportMode
 import pytest
 
