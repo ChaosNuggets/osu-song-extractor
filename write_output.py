@@ -29,8 +29,8 @@ class BeatmapInfo:
     artist: str = ''
     version: str = ''
     bg_filename: str = ''
-    beatmap_id: str = ''
-    beatmap_set_id: str = ''
+    beatmap_id: int = 0
+    beatmap_set_id: int = 0
 
     # Looks at .osu file and initializes all the member variables
     def extract_beatmap_info(self, file: TextIO) -> None:
@@ -56,7 +56,7 @@ class BeatmapInfo:
             if is_events_section and bg_match:
                 value = bg_match.group(1)
                 # Why the fuck does an apostrophe get replaced with an underscore here
-                bg_filename = parse_string(value).replace("'", "_")
+                self.bg_filename = parse_string(value).replace("'", "_")
                 continue
 
             # Look pattern "<option>:<value>" in line
@@ -70,17 +70,17 @@ class BeatmapInfo:
             match option:
                 case 'AudioFilename':
                     # Why the fuck does an apostrophe get replaced with an underscore here
-                    audio_filename = parse_string(value).replace("'", "_")
+                    self.audio_filename = parse_string(value).replace("'", "_")
                 case 'Title':
-                    title = value.strip()
+                    self.title = value.strip()
                 case 'Artist':
-                    artist = value.strip()
+                    self.artist = value.strip()
                 case 'Version':
-                    version = value.strip()
+                    self.version = value.strip()
                 case 'BeatmapID':
-                    beatmap_id = value.strip()
+                    self.beatmap_id = int(value)
                 case 'BeatmapSetID':
-                    beatmap_set_id = value.strip()
+                    self.beatmap_set_id = int(value)
 
 # Searches all the beatmap folders, creates a corresponding subfolder if
 # export_into_subfolders = True, and calls copy_audio to do the rest
@@ -90,23 +90,39 @@ def write_output(conf_values: ConfValues) -> None:
     for p_in_sub in p_in.iterdir():
         if not p_in_sub.is_dir():
             continue
+        
+        # Extract the beatmap info from all the .osu files in that subfolder
+        beatmap_infos = extract_beatmap_infos(p_in_sub)
 
+        # TODO: continue
+        # # Create the output subfolder
+        # input_subfolder = str(p_in_sub)
+        # output_subfolder = conf_values.output_dir + subfolder_pattern.sub(r'\1\3 \2', input_subfolder)
+        # p_out_sub = Path(output_subfolder)
+        # p_out_sub.mkdir(parents=True, exist_ok=True)
+
+        # # Copy all the audio
+        # copy_audio(p_in_sub, p_out_sub)
+
+# Extract the beatmap info from all the .osu files in a directory and return them in a list
+def extract_beatmap_infos(path: Path) -> list[BeatmapInfo]:
+    # Iterate through all .osu files
+    beatmap_infos: list[BeatmapInfo] = []
+    for osu_file in list(path.glob('*.osu')):
+
+        # Extract the beatmap info from a single .osu file
         beatmap_info = BeatmapInfo()
         with open(osu_file, 'r') as file:
             beatmap_info.extract_beatmap_info(file)
 
+        # Throw error if crucial key is missing from .osu file
         for key, value in asdict(beatmap_info).items():
             if not value and key != 'bg_filename':
                 raise KeyError(f"{osu_file} is missing {key}!")
 
-        # Create the output subfolder
-        input_subfolder = str(p_in_sub)
-        output_subfolder = conf_values.output_dir + subfolder_pattern.sub(r'\1\3 \2', input_subfolder)
-        p_out_sub = Path(output_subfolder)
-        p_out_sub.mkdir(parents=True, exist_ok=True)
+        beatmap_infos.append(beatmap_info) # add to return list
 
-        # Copy all the audio
-        copy_audio(p_in_sub, p_out_sub)
+    return beatmap_infos
 
 def copy_audio(p_in_sub: Path, p_out_sub: Path) -> None:
     prev_audio_filenames = set()
