@@ -1,13 +1,23 @@
 import re
 from enum import Enum
+from write_output import BeatmapInfo
 
 # Looks for something surrounded by quotation marks and puts it into group 1
-string_pattern = re.compile(r'"(.*)"')
+string_pat = re.compile(r'"(.*)"')
+
+# Puts the filename without the extension in group 1 and the extension in group 2
+filename_pat = re.compile(r'(.*)\.([^\.]+)$')
+
+# Looks for something surrounded by angle brackets
+replacement_field_pat = re.compile(r'<[^\n\r<>]+>')
+
+# Matches with any forbidden filename chars
+forbidden_pat = re.compile(r'[<>:"\/\\|?*]')
 
 # Strips the string of its quotation marks
 def parse_string(value: str) -> str:
     # If the value is surrounded by quotation marks, return what's inside
-    string_match = string_pattern.search(value)
+    string_match = string_pat.search(value)
     if string_match:
         return string_match.group(1)
 
@@ -31,3 +41,39 @@ def parse_enum(value: str, EnumCls: type[Enum]) -> Enum:
             return member
 
     raise ValueError(f'Cannot parse {value} as {EnumCls}')
+
+# Input filename and return filename, extension
+def parse_filename(value: str) -> tuple[str, str]:
+    # Search for something in the form filename.extension
+    filename_match = filename_pat.search(value)
+    if filename_match:
+        return filename_match.group(1), filename_match.group(2)
+    
+    # If no match, return a blank string for the extension
+    return value, ''
+
+# Replaces the replacement fields in value with the info in beatmap_info
+def parse_replacement_fields(value: str, beatmap_info: BeatmapInfo) -> str:
+    # Find something that is surrounded by angle brackets and call the
+    # callback function to determine what to replace it with
+    return replacement_field_pat.sub(lambda m: _replacement_field_callback(m, beatmap_info), value)
+
+# Returns the corresponding information from beatmap_info based on the replacement field in m
+def _replacement_field_callback(m: re.Match[str] | None, beatmap_info: BeatmapInfo) -> str:
+    match m.group():
+        case r'<AudioFilename>':
+            return beatmap_info.audio_filename
+        case r'<Title>':
+            return beatmap_info.title
+        case r'<Artist>':
+            return beatmap_info.artist
+        case r'<Version>':
+            return beatmap_info.version
+        case r'<BackgroundFilename>':
+            return beatmap_info.bg_filename
+        case r'<BeatmapID>':
+            return beatmap_info.beatmap_id
+        case r'<BeatmapSetID>':
+            return beatmap_info.beatmap_set_id
+
+    return m.group()

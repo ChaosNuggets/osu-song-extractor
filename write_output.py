@@ -9,26 +9,23 @@ from typing import TextIO
 # Looks for a configuration option in the form "<option>:<value>", puts
 # option into group 1, and puts value into group 2. This works for 
 # AudioFilename, Title, Artist, Version, BeatmapID, and BeatmapSetID.
-conf_pat = re.compile(r'^(.*):(.*)')
+osu_conf_pat = re.compile(r'^(.*):(.*)')
 
 # Finds section headers in the form [<header>] and puts header in group 1
-section_pat = re.compile(r'^\[(.*)\]')
+osu_section_pat = re.compile(r'^\[(.*)\]')
 
 # Finds the background filename and puts it into group 1
 bg_filename_pat = re.compile(r'^0,0,([^,]*),\d+,\d+')
 
-forbidden_pat = re.compile(r'[<>:"\/\\|?*]') # Looks for forbidden filename chars
-
-# Puts the filename without the extension in group 1 and the extension in group 2
-filename_pat = re.compile(r'(.*)\.([^\.]+)$')
-
 @dataclass
 class BeatmapInfo:
-    audio_filename: str = ''
+    audio_filename: str = '' # does not include extension
+    audio_ext: str = ''
     title: str = ''
     artist: str = ''
     version: str = ''
-    bg_filename: str = ''
+    bg_filename: str = '' # does not include extension
+    bg_ext: str = ''
     beatmap_id: int = 0
     beatmap_set_id: int = 0
 
@@ -41,7 +38,7 @@ class BeatmapInfo:
                 break
 
             # Search for section header pattern in line
-            section_match = section_pat.search(line)
+            section_match = osu_section_pat.search(line)
             if section_match:
                 # If the section is Events, set the flag to True,
                 # otherwise, set it to False
@@ -55,12 +52,14 @@ class BeatmapInfo:
             bg_match = bg_filename_pat.search(line)
             if is_events_section and bg_match:
                 value = bg_match.group(1)
-                # Why the fuck does an apostrophe get replaced with an underscore here
-                self.bg_filename = parse_string(value).replace("'", "_")
+                # Strips string, replaces apostrophe with underscore, and then separates the
+                # basename and the extension into two different variables.
+                # Why the fuck does an apostrophe get replaced with an underscore here Peppy
+                self.bg_filename, self.bg_ext = parse_filename(parse_string(value).replace("'", "_"))
                 continue
 
             # Look pattern "<option>:<value>" in line
-            conf_match = conf_pat.search(line)
+            conf_match = osu_conf_pat.search(line)
             if not conf_match:
                 continue
 
@@ -69,8 +68,10 @@ class BeatmapInfo:
             value = conf_match.group(2)
             match option:
                 case 'AudioFilename':
-                    # Why the fuck does an apostrophe get replaced with an underscore here
-                    self.audio_filename = parse_string(value).replace("'", "_")
+                    # Strips string, replaces apostrophe with underscore, and then separates the
+                    # basename and the extension into two different variables.
+                    # Why the fuck does an apostrophe get replaced with an underscore here Peppy
+                    self.audio_filename, self.audio_ext = parse_filename(parse_string(value).replace("'", "_"))
                 case 'Title':
                     self.title = value.strip()
                 case 'Artist':
@@ -100,11 +101,12 @@ def write_output(conf_values: ConfValues) -> None:
         beatmap_infos = extract_beatmap_infos(p_in_sub)
 
         # TODO: continue
-        # # Create the output subfolder
-        # input_subfolder = str(p_in_sub)
-        # output_subfolder = conf_values.output_dir + subfolder_pattern.sub(r'\1\3 \2', input_subfolder)
-        # p_out_sub = Path(output_subfolder)
-        # p_out_sub.mkdir(parents=True, exist_ok=True)
+        # # Create the output subfolder if the user wants it
+        # if conf_values.export_into_subfolders:
+        #     p_out_sub = Path(rf'{conf_values.output_dir}/{replacement_field_string}')
+        #     p_out_sub.mkdir(parents=True, exist_ok=True)
+        # else:
+        #     p_out_sub = Path(conf_values.output_dir)
 
         # # Copy all the audio
         # copy_audio(p_in_sub, p_out_sub)
@@ -177,8 +179,6 @@ def copy_audio(p_in_sub: Path, p_out_sub: Path) -> None:
             
         if not p_out_bg.is_file() and p_in_bg.is_file():
             shutil.copy(p_in_bg, p_out_bg)
-
-
 
 # # Testing code
 # p_in_sub = Path('/home/stanley/Music/Songs/1441640 DJ SHARPNEL - FAKE PROMISE/')

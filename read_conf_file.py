@@ -133,23 +133,23 @@ def read_conf_file(conf_file: str) -> ConfValues:
     # Compiling is efficient for loops
     # Pattern looks for "<config_option>=<value>" and places
     # config option in first group and value in second group
-    conf_pattern = re.compile(r'^([^=#\n\r]*)=([^#\n\r]*)')
+    conf_pat = re.compile(r'^([^=#\n\r]*)=([^#\n\r]*)')
 
     # Looks for something surrounded by square brackets [] and puts the inside text into group 1
-    section_pattern = re.compile(r'^\[(.*)\]')
+    section_pat = re.compile(r'^\[(.*)\]')
 
     # Read configuration file
     with open(conf_file, 'r') as file:
         section = ConfSection.GENERAL
         for line in file:
             # Search for section header pattern in file
-            section_match = section_pattern.search(line)
+            section_match = section_pat.search(line)
             if section_match:
                 section = parse_enum(section_match.group(1), ConfSection)
                 continue
 
             # Search for configuration option pattern in file
-            conf_match = conf_pattern.search(line)
+            conf_match = conf_pat.search(line)
             if not conf_match:
                 continue
 
