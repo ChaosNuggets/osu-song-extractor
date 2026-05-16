@@ -3,7 +3,8 @@ import re
 import shutil
 import music_tag
 from dataclasses import dataclass, astuple, asdict
-from parse_utils import parse_string
+from osu_song_extractor.parse_utils import parse_string, parse_filename
+from osu_song_extractor.conf import ConfInfo
 from typing import TextIO
 
 # Looks for a configuration option in the form "<option>:<value>", puts
@@ -85,14 +86,40 @@ class BeatmapInfo:
 
         # Throw error if crucial key is missing from .osu file
         for key, value in asdict(self).items():
-            if not value and key != 'bg_filename':
+            if not value and key != 'bg_filename' and key != 'bg_ext' and key != 'audio_ext':
                 raise KeyError(f"{file.name} is missing {key}!")
+
+    # Replaces the replacement fields in value with the info in beatmap_info
+    def parse_replacement_fields(self, value: str) -> str:
+        # Find something that is surrounded by angle brackets and call the
+        # callback function to determine what to replace it with
+        return replacement_field_pat.sub(self._replacement_field_callback, value)
+    
+    # Returns the corresponding information from beatmap_info based on the replacement field in m
+    def _replacement_field_callback(self, m: re.Match[str] | None) -> str:
+        match m.group():
+            case r'<AudioFilename>':
+                return self.audio_filename
+            case r'<Title>':
+                return self.title
+            case r'<Artist>':
+                return self.artist
+            case r'<Version>':
+                return self.version
+            case r'<BackgroundFilename>':
+                return self.bg_filename
+            case r'<BeatmapID>':
+                return self.beatmap_id
+            case r'<BeatmapSetID>':
+                return self.beatmap_set_id
+    
+        return m.group()
 
 # Searches all the beatmap folders, creates a corresponding subfolder if
 # export_into_subfolders = True, and calls copy_audio to do the rest
-def write_output(conf_values: ConfValues) -> None:
+def write_output(conf_info: ConfInfo) -> None:
     # Search each subfolder of the songs folder
-    p_in = Path(conf_values.input_dir)
+    p_in = Path(conf_info.input_dir)
     for p_in_sub in p_in.iterdir():
         if not p_in_sub.is_dir():
             continue
@@ -102,11 +129,11 @@ def write_output(conf_values: ConfValues) -> None:
 
         # TODO: continue
         # # Create the output subfolder if the user wants it
-        # if conf_values.export_into_subfolders:
-        #     p_out_sub = Path(rf'{conf_values.output_dir}/{replacement_field_string}')
+        # if conf_info.export_into_subfolders:
+        #     p_out_sub = Path(rf'{conf_info.output_dir}/{replacement_field_string}')
         #     p_out_sub.mkdir(parents=True, exist_ok=True)
         # else:
-        #     p_out_sub = Path(conf_values.output_dir)
+        #     p_out_sub = Path(conf_info.output_dir)
 
         # # Copy all the audio
         # copy_audio(p_in_sub, p_out_sub)

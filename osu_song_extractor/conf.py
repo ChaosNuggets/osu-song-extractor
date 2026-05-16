@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict, field
 import re
 from enum import Enum, auto
-from parse_utils import parse_string, parse_bool, parse_enum
+from osu_song_extractor.parse_utils import parse_string, parse_bool, parse_enum
 
 # Enum that stores whether the user wants to always write the song metadata,
 # write the metadata only if missing, or never write the metadata
@@ -20,7 +20,7 @@ class BGExportMode(Enum):
 
 # Stores configuration options for a specific type of beatmap. See the "[x_bg_x_song] Options" section in docs/configuration.md for more info.
 @dataclass
-class BeatmapTypeConf:
+class XBGXSongConfInfo:
     export_into_deep_subfolder: bool = False
     deep_subfolder_name: str = r'<Version>'
     overrite_existing_files: bool = False
@@ -65,7 +65,7 @@ class ConfSection(Enum):
 
 # Stores all the configuration options. See the "Configuration Options" section in docs/configuration.md for more info.
 @dataclass
-class ConfValues:
+class ConfInfo:
     # General configuration options. See the "[General] Options" section in docs/configuration.md for more info.
     input_dir: str = ''
     output_dir: str = ''
@@ -74,10 +74,10 @@ class ConfValues:
     illegal_char_override: str = '-'
 
     # Configuration options for each type of beatmap. 
-    one_bg_one_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
-    mult_bg_one_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
-    one_bg_mult_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
-    mult_bg_mult_song: BeatmapTypeConf = field(default_factory=BeatmapTypeConf)
+    one_bg_one_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
+    mult_bg_one_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
+    one_bg_mult_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
+    mult_bg_mult_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
 
     # Fills in the special defaults for one_bg_mult_song and mult_bg_mult_song
     def __post_init__(self):
@@ -88,10 +88,10 @@ class ConfValues:
         self.mult_bg_mult_song.song_filename = r'<Artist> - <Version>'
         self.mult_bg_mult_song.title_meta = r'<Version>'
 
-    # Fills in ConfValues based on the option and value specified
+    # Fills in ConfInfo based on the option and value specified
     # in the config file
     def init_from_conf(self, option: str, value: str, section: ConfSection) -> None:
-        # Parse section so we modify the correct BeatmapTypeConf instance
+        # Parse section so we modify the correct XBGXSongConfInfo instance
         match section:
             case ConfSection.ONE_BG_ONE_SONG:
                 x_bg_x_song = self.one_bg_one_song
@@ -127,8 +127,8 @@ class ConfValues:
                 raise KeyError(fr'Unknown configuration option "{option}" in section [General]')
 
 # Returns the input_dir and output_dir entries in osu-song-extractor.cfg
-def read_conf_file(conf_file: str) -> ConfValues:
-    conf_values = ConfValues()
+def read_conf_file(conf_file: str) -> ConfInfo:
+    conf_info = ConfInfo()
 
     # Compiling is efficient for loops
     # Pattern looks for "<config_option>=<value>" and places
@@ -156,10 +156,10 @@ def read_conf_file(conf_file: str) -> ConfValues:
             # Parse the configuration option
             option = conf_match.group(1).strip()
             value = conf_match.group(2).strip()
-            conf_values.init_from_conf(option, value, section)
+            conf_info.init_from_conf(option, value, section)
 
     # Raise an error if options with no defaults are missing from the config file
-    for key, value in asdict(conf_values).items():
+    for key, value in asdict(conf_info).items():
         if not value:
             raise KeyError(f'Please specify {key} in the configuration file')
-    return conf_values
+    return conf_info

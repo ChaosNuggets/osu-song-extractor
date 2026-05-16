@@ -1,4 +1,4 @@
-from write_output import extract_beatmap_infos, BeatmapInfo
+from osu_song_extractor.write_output import extract_beatmap_infos, BeatmapInfo
 from pathlib import Path
 import pytest
 
@@ -45,11 +45,12 @@ def test_extract_beatmap_info_missing_bg():
         beatmap_info.extract_beatmap_info(file)
 
     assert beatmap_info.audio_filename == 'Freedom Dive'
-    assert beatmap_info.audio_ext == 'mp3'
+    assert beatmap_info.audio_ext == ''
     assert beatmap_info.title == 'FREEDOM DiVE'
     assert beatmap_info.artist == 'xi'
     assert beatmap_info.version == '4K Another'
     assert beatmap_info.bg_filename == ''
+    assert beatmap_info.bg_ext == ''
     assert beatmap_info.beatmap_id == 419485
     assert beatmap_info.beatmap_set_id == 173612
 

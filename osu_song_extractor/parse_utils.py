@@ -1,6 +1,5 @@
 import re
 from enum import Enum
-from write_output import BeatmapInfo
 
 # Looks for something surrounded by quotation marks and puts it into group 1
 string_pat = re.compile(r'"(.*)"')
@@ -51,29 +50,3 @@ def parse_filename(value: str) -> tuple[str, str]:
     
     # If no match, return a blank string for the extension
     return value, ''
-
-# Replaces the replacement fields in value with the info in beatmap_info
-def parse_replacement_fields(value: str, beatmap_info: BeatmapInfo) -> str:
-    # Find something that is surrounded by angle brackets and call the
-    # callback function to determine what to replace it with
-    return replacement_field_pat.sub(lambda m: _replacement_field_callback(m, beatmap_info), value)
-
-# Returns the corresponding information from beatmap_info based on the replacement field in m
-def _replacement_field_callback(m: re.Match[str] | None, beatmap_info: BeatmapInfo) -> str:
-    match m.group():
-        case r'<AudioFilename>':
-            return beatmap_info.audio_filename
-        case r'<Title>':
-            return beatmap_info.title
-        case r'<Artist>':
-            return beatmap_info.artist
-        case r'<Version>':
-            return beatmap_info.version
-        case r'<BackgroundFilename>':
-            return beatmap_info.bg_filename
-        case r'<BeatmapID>':
-            return beatmap_info.beatmap_id
-        case r'<BeatmapSetID>':
-            return beatmap_info.beatmap_set_id
-
-    return m.group()

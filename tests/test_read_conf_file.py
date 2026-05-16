@@ -1,4 +1,4 @@
-from read_conf_file import read_conf_file, MetaWriteMode, BGExportMode
+from osu_song_extractor.conf import read_conf_file, MetaWriteMode, BGExportMode
 import pytest
 
 def test_normal_cfg():
