@@ -1,0 +1,28 @@
+osu file format v13
+
+[General]
+AudioFilename: Freedom Dive.mp3
+
+[Editor]
+
+[Metadata]
+Title:FREEDOM DiVE
+Artist:xi
+Version:4K Another
+BeatmapID:419485
+BeatmapSetID:173612
+
+[Difficulty]
+
+[Events]
+//Background and Video events
+//Break Periods
+//Storyboard Layer 0 (Background)
+//Storyboard Layer 1 (Fail)
+//Storyboard Layer 2 (Pass)
+//Storyboard Layer 3 (Foreground)
+//Storyboard Sound Samples
+//Background Colour Transformations
+3,100,163,162,255
+
+[TimingPoints]

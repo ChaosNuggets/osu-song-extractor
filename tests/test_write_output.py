@@ -1,7 +1,9 @@
-from write_output import extract_beatmap_infos
+from write_output import extract_beatmap_infos, BeatmapInfo
 from pathlib import Path
+import pytest
 
 def test_extract_beatmap_infos():
+    # Extract the beatmap infos from the freedom dive beatmap set
     p_in_sub = Path('tests/173612 xi - FREEDOM DiVE')
     beatmap_infos = extract_beatmap_infos(p_in_sub)
     assert len(beatmap_infos) == 9
@@ -33,3 +35,24 @@ def test_extract_beatmap_infos():
     assert any(beatmap_info.beatmap_id == 502132 for beatmap_info in beatmap_infos)
     assert any(beatmap_info.beatmap_id == 473228 for beatmap_info in beatmap_infos)
     assert any(beatmap_info.beatmap_id == 420779 for beatmap_info in beatmap_infos)
+
+def test_extract_beatmap_info_missing_bg():
+    # Extract the beatmap info from missing-bg.osu
+    beatmap_info = BeatmapInfo()
+    with open('tests/missing-bg.osu', 'r') as file:
+        beatmap_info.extract_beatmap_info(file)
+
+    assert beatmap_info.audio_filename == 'Freedom Dive.mp3'
+    assert beatmap_info.title == 'FREEDOM DiVE'
+    assert beatmap_info.artist == 'xi'
+    assert beatmap_info.version == '4K Another'
+    assert beatmap_info.bg_filename == ''
+    assert beatmap_info.beatmap_id == 419485
+    assert beatmap_info.beatmap_set_id == 173612
+
+def test_extract_beatmap_info_missing_title():
+    # Extract the beatmap info from missing-title.osu
+    beatmap_info = BeatmapInfo()
+    with open('tests/missing-title.osu', 'r') as file:
+        with pytest.raises(KeyError):
+            beatmap_info.extract_beatmap_info(file)

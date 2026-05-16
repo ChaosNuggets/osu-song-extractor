@@ -82,6 +82,11 @@ class BeatmapInfo:
                 case 'BeatmapSetID':
                     self.beatmap_set_id = int(value)
 
+        # Throw error if crucial key is missing from .osu file
+        for key, value in asdict(self).items():
+            if not value and key != 'bg_filename':
+                raise KeyError(f"{file.name} is missing {key}!")
+
 # Searches all the beatmap folders, creates a corresponding subfolder if
 # export_into_subfolders = True, and calls copy_audio to do the rest
 def write_output(conf_values: ConfValues) -> None:
@@ -115,10 +120,6 @@ def extract_beatmap_infos(path: Path) -> list[BeatmapInfo]:
         with open(osu_file, 'r') as file:
             beatmap_info.extract_beatmap_info(file)
 
-        # Throw error if crucial key is missing from .osu file
-        for key, value in asdict(beatmap_info).items():
-            if not value and key != 'bg_filename':
-                raise KeyError(f"{osu_file} is missing {key}!")
 
         beatmap_infos.append(beatmap_info) # add to return list
 
