@@ -10,9 +10,6 @@ filename_pat = re.compile(r'(.*)\.([^\.]+)$')
 # Looks for something surrounded by angle brackets
 replacement_field_pat = re.compile(r'<[^\n\r<>]+>')
 
-# Matches with any forbidden filename chars
-forbidden_pat = re.compile(r'[<>:"\/\\|?*]')
-
 # Strips the string of its quotation marks
 def parse_string(value: str) -> str:
     # If the value is surrounded by quotation marks, return what's inside

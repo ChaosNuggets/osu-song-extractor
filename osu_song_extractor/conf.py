@@ -3,6 +3,9 @@ import re
 from enum import Enum, auto
 from osu_song_extractor.parse_utils import parse_string, parse_bool, parse_enum
 
+# Matches with any illegal filename chars
+illegal_pat = re.compile(r'[<>:"\/\\|?*]')
+
 # Enum that stores whether the user wants to always write the song metadata,
 # write the metadata only if missing, or never write the metadata
 class MetaWriteMode(Enum):
@@ -125,6 +128,9 @@ class ConfInfo:
                     self.illegal_char_override = parse_string(value)
             case _:
                 raise KeyError(fr'Unknown configuration option "{option}" in section [General]')
+
+    def replace_illegal_chars(self, value: str) -> str:
+        return illegal_pat.sub(self.illegal_char_override, value)
 
 # Returns the input_dir and output_dir entries in osu-song-extractor.cfg
 def read_conf_file(conf_file: str) -> ConfInfo:

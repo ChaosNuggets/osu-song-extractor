@@ -1,3 +1,4 @@
+# TODO: ADD EXAMPLES
 # Configuration Guide
 The configuration file is called osu-song-extractor.cfg. This is the documentation for that file.
 
