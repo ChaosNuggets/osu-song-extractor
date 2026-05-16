@@ -7,9 +7,6 @@ string_pat = re.compile(r'"(.*)"')
 # Puts the filename without the extension in group 1 and the extension in group 2
 filename_pat = re.compile(r'(.*)\.([^\.]+)$')
 
-# Looks for something surrounded by angle brackets
-replacement_field_pat = re.compile(r'<[^\n\r<>]+>')
-
 # Strips the string of its quotation marks
 def parse_string(value: str) -> str:
     # If the value is surrounded by quotation marks, return what's inside

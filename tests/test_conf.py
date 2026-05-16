@@ -2,22 +2,22 @@ from osu_song_extractor.conf import read_conf_file, MetaWriteMode, BGExportMode
 import pytest
 
 def test_normal_cfg():
-    conf_values = read_conf_file('tests/normal-test.cfg')
-    assert conf_values.input_dir == '~/Music/Songs'
-    assert conf_values.output_dir == '~/Music/Extracted-Songs'
+    conf_info = read_conf_file('tests/normal-test.cfg')
+    assert conf_info.input_dir == 'tests'
+    assert conf_info.output_dir == 'tests/extracted'
 
 def test_many_spaces_cfg():
-    conf_values = read_conf_file('tests/many-spaces-test.cfg')
-    assert conf_values.input_dir == '~/Music/Songs'
-    assert conf_values.output_dir == r'~\Music\Extracted-Songs'
+    conf_info = read_conf_file('tests/many-spaces-test.cfg')
+    assert conf_info.input_dir == '~/Music/Songs'
+    assert conf_info.output_dir == r'~\Music\Extracted-Songs'
 
 def test_invalid_general_key_cfg():
     with pytest.raises(KeyError):
-        conf_values = read_conf_file('tests/invalid-general-key.cfg')
+        conf_info = read_conf_file('tests/invalid-general-key.cfg')
 
 def test_missing_key_cfg():
     with pytest.raises(KeyError):
-        conf_values = read_conf_file('tests/missing-key.cfg')
+        conf_info = read_conf_file('tests/missing-key.cfg')
 
 def test_default_cfg():
     conf = read_conf_file(r'tests/normal-test.cfg')
@@ -100,12 +100,12 @@ def test_custom_cfg():
 
 def test_invalid_x_bg_x_song_key_cfg():
     with pytest.raises(KeyError):
-        conf_values = read_conf_file('tests/invalid-x_bg_x_song-key.cfg')
+        conf_info = read_conf_file('tests/invalid-x_bg_x_song-key.cfg')
 
 def test_invalid_bool_cfg():
     with pytest.raises(ValueError):
-        conf_values = read_conf_file('tests/invalid-bool.cfg')
+        conf_info = read_conf_file('tests/invalid-bool.cfg')
 
 def test_invalid_enum_cfg():
     with pytest.raises(ValueError):
-        conf_values = read_conf_file('tests/invalid-enum.cfg')
+        conf_info = read_conf_file('tests/invalid-enum.cfg')

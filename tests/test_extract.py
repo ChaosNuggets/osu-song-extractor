@@ -1,4 +1,5 @@
-from osu_song_extractor.extract import extract_beatmap_set_info, BeatmapInfo
+from osu_song_extractor.extract import extract_beatmap_set_info, BeatmapInfo, extract_all_beatmaps
+from osu_song_extractor.conf import read_conf_file
 from pathlib import Path
 import pytest
 
@@ -54,9 +55,6 @@ def test_extract_beatmap_info_missing_bg():
     assert beatmap_info.beatmap_id == 419485
     assert beatmap_info.beatmap_set_id == 173612
 
-def test_extract_beatmap_info_missing_title():
-    # Extract the beatmap info from missing-title.osu
-    beatmap_info = BeatmapInfo()
-    with open('tests/missing-title.osu', 'r') as file:
-        with pytest.raises(KeyError):
-            beatmap_info.extract_beatmap_info(file)
+def test_extract_all_beatmaps():
+    conf_info = read_conf_file('tests/normal-test.cfg')
+    extract_all_beatmaps(conf_info)
