@@ -220,11 +220,11 @@ __marimo__/
 *.odt#
 osu-song-extractor.sh
 tests/test.sh
-tests/test_extract/173612 xi - FREEDOM DiVE
-tests/test_extract/1441640 DJ SHARPNEL - FAKE PROMISE
-tests/test_extract/1572720 M2U - M2U Pack
-tests/test_extract/1964020 ClariS - border (TV Size)
-tests/test_extract/2097249 Various Artists - Begin_s 4K LN Pack Level 2
+173612 xi - FREEDOM DiVE/
+1441640 DJ SHARPNEL - FAKE PROMISE/
+1572720 M2U - M2U Pack/
+1964020 ClariS - border (TV Size)/
+2097249 Various Artists - Begin_s 4K LN Pack Level 2/
 plan.odt
 tests/extracted
 tests/tmp
