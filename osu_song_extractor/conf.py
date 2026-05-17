@@ -166,6 +166,6 @@ def read_conf_file(conf_file: str) -> ConfInfo:
 
     # Raise an error if options with no defaults are missing from the config file
     for key, value in asdict(conf_info).items():
-        if not value:
+        if not value and type(value) is str:
             raise KeyError(f'Please specify {key} in the configuration file')
     return conf_info
