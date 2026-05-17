@@ -224,8 +224,8 @@ def copy_song(p_in_sub: Path, p_out_deep: Path,
         print(f"\033[33mWarning:\033[0m the audio file from {beatmap_info.osu_filename} was listed but couldn't be found, skipping")
         return None
 
-    # If overrite_existing_files is True or the destination file doesn't exist, copy
-    if not (x_bg_x_song_conf_info.overrite_existing_files or not p_out_song.is_file()):
+    # If overwrite_existing_files is True or the destination file doesn't exist, copy
+    if not (x_bg_x_song_conf_info.overwrite_existing_files or not p_out_song.is_file()):
         return None # Return None to signal that no copy happened
     shutil.copy2(p_in_song, p_out_song)
 
@@ -276,9 +276,9 @@ def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path,
         return
 
     # Export background as separate if the user wants that
-    # If overrite_existing_files is True or the destination file doesn't exist, copy
+    # If overwrite_existing_files is True or the destination file doesn't exist, copy
     out_bg = beatmap_info.parse_replacement_fields(x_bg_x_song_conf_info.bg_filename) # Parse replacement fields
     out_bg = fr'{conf_info.replace_illegal_chars(out_bg)}.{beatmap_info.bg_ext}' # Re-add image extension
     p_out_bg = Path(fr'{p_out_deep}/{out_bg}') # Get destination path
-    if not p_out_bg.is_file() or x_bg_x_song_conf_info.overrite_existing_files:
+    if not p_out_bg.is_file() or x_bg_x_song_conf_info.overwrite_existing_files:
         shutil.copy2(p_in_bg, p_out_bg)

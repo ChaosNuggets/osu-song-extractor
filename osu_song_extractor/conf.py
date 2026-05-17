@@ -26,7 +26,7 @@ class BGExportMode(Enum):
 class XBGXSongConfInfo:
     export_into_deep_subfolder: bool = False
     deep_subfolder_name: str = r'<Version>'
-    overrite_existing_files: bool = False
+    overwrite_existing_files: bool = False
     song_filename: str = r'<Artist> - <Title>'
     meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING 
     title_meta: str = r'<Title>'
@@ -41,8 +41,8 @@ class XBGXSongConfInfo:
                 self.export_into_deep_subfolder = parse_bool(value)
             case 'deep_subfolder_name':
                 self.deep_subfolder_name = parse_string(value)
-            case 'overrite_existing_files':
-                self.overrite_existing_files = parse_bool(value)
+            case 'overwrite_existing_files':
+                self.overwrite_existing_files = parse_bool(value)
             case 'song_filename':
                 self.song_filename = parse_string(value)
             case 'meta_write_mode':

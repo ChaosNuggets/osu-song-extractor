@@ -54,8 +54,8 @@ Default: `True` for \[mult\_bg\_mult\_song\], `False` for all other beatmap type
 What name to give the deeper subfolders if `export_into_deep_subfolder` is `True`. Supports [replacement fields](#replacement-fields). \
 Default: `"<Version>"`
 
-### overrite\_existing\_files
-Whether or not to overrite existing files in the output directory with the same filename. Possible values are `True`, `False`. \
+### overwrite\_existing\_files
+Whether or not to overwrite existing files in the output directory with the same filename. Possible values are `True`, `False`. \
 Default: `False`
 
 ### song\_filename
@@ -63,7 +63,7 @@ What name to give the exported song. Supports [replacement fields](#replacement-
 Default: `"<Artist> - <Title>"` if there's only one song, `"<Artist> - <Title> [<Version>]"` for \[one\_bg\_mult\_song\], `"<Artist> - <Version>"` for \[mult\_bg\_mult\_song\]
 
 ### meta\_write\_mode
-When to overrite the output song's title and artist metadata, based on if it's present in the original file. Possible values are `NEVER`, `IF_MISSING`, `ALWAYS`. \
+When to write the output song's title and artist metadata, based on if it's present in the original file. Possible values are `NEVER`, `IF_MISSING`, `ALWAYS`. \
 Default: `IF_MISSING`
 
 ### title\_meta
