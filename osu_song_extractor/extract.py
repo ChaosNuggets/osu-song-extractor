@@ -164,7 +164,7 @@ def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
     full_audio_filenames = {beatmap_info.full_audio_filename() for beatmap_info in beatmap_set_info}
     full_bg_filenames = {beatmap_info.full_bg_filename() for beatmap_info in beatmap_set_info}
     match (len(full_bg_filenames), len(full_audio_filenames)):
-        case (1, 1):
+        case (1, 1) | (0, 1) | (1, 0) | (0, 0):
             x_bg_x_song_conf_info = conf_info.one_bg_one_song
         case (_, 1):
             x_bg_x_song_conf_info = conf_info.mult_bg_one_song

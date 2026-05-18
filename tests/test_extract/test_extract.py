@@ -71,7 +71,7 @@ def test_no_overwrite_existing_files():
         file.write(b'\x48\x65\x6c\x6c\x6f')
 
     # Call extract_beatmap()
-    conf_info = read_conf_file('tests/test_extract/tmp_no_overwrite.cfg')
+    conf_info = read_conf_file('tests/test_extract/no_overwrite.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
@@ -95,7 +95,7 @@ def test_overwrite_existing_files():
         file.write(b'\x48\x65\x6c\x6c\x6f')
 
     # Call extract_beatmap()
-    conf_info = read_conf_file('tests/test_extract/tmp_overwrite.cfg')
+    conf_info = read_conf_file('tests/test_extract/overwrite.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
@@ -115,7 +115,7 @@ def test_bg_export_as_meta_always():
     shutil.rmtree('tests/tmp', ignore_errors=True)
 
     # Call extract_beatmap()
-    conf_info = read_conf_file('tests/test_extract/tmp_bg_export_as_meta_always.cfg')
+    conf_info = read_conf_file('tests/test_extract/bg_export_as_meta_always.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
@@ -147,7 +147,7 @@ def test_only_copy_song():
     f.save()
 
     # Call extract_beatmap()
-    conf_info = read_conf_file('tests/test_extract/tmp_only_copy_song.cfg')
+    conf_info = read_conf_file('tests/test_extract/only_copy_song.cfg')
     extract_beatmap(p_in_sub_copy, conf_info)
 
     # Check that all the metadata is untouched
@@ -168,7 +168,7 @@ def test_bg_export_as_meta_if_missing():
     shutil.rmtree('tests/tmp', ignore_errors=True)
 
     # Call extract_beatmap()
-    conf_info = read_conf_file('tests/test_extract/tmp_bg_export_as_meta_if_missing.cfg')
+    conf_info = read_conf_file('tests/test_extract/bg_export_as_meta_if_missing.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
@@ -178,6 +178,14 @@ def test_bg_export_as_meta_if_missing():
         f = music_tag.load_file(p_out_song)
         assert f['title'].first == r'<oogabooga>'
         assert f['artwork'].first.data != file.read()
+
+# Tests extracting a bunch of invalid osu beatmaps in tests/test_extract/Invalid_Songs
+def test_extract_all_invalid_beatmaps():
+    shutil.rmtree('tests/tmp', ignore_errors=True)
+    conf_info = read_conf_file('tests/test_extract/invalid_songs.cfg')
+    extract_all_beatmaps(conf_info)
+    for path in Path('tests/tmp/extracted').rglob('*'):
+        assert not path.is_file() # Test that nothing got copied
 
 # Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs
 # User has to manually check tests/extracted to see if it's correct
