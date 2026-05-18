@@ -7,7 +7,7 @@ import music_tag
 
 def test_extract_beatmap_set_info():
     # Extract the beatmap infos from the freedom dive beatmap set
-    p_in_sub = Path('tests/test_extract/173612 xi - FREEDOM DiVE')
+    p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     beatmap_set_info = extract_beatmap_set_info(p_in_sub)
     assert len(beatmap_set_info) == 9
     for beatmap_info in beatmap_set_info:
@@ -72,7 +72,7 @@ def test_no_overwrite_existing_files():
 
     # Call extract_beatmap()
     conf_info = read_conf_file('tests/test_extract/tmp_no_overwrite.cfg')
-    p_in_sub = Path('tests/test_extract/173612 xi - FREEDOM DiVE')
+    p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
     # Test that both files didn't get overwritten
@@ -96,7 +96,7 @@ def test_overwrite_existing_files():
 
     # Call extract_beatmap()
     conf_info = read_conf_file('tests/test_extract/tmp_overwrite.cfg')
-    p_in_sub = Path('tests/test_extract/173612 xi - FREEDOM DiVE')
+    p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
     # Test that both files got overwritten
@@ -116,12 +116,12 @@ def test_bg_export_as_meta_always():
 
     # Call extract_beatmap()
     conf_info = read_conf_file('tests/test_extract/tmp_bg_export_as_meta_always.cfg')
-    p_in_sub = Path('tests/test_extract/173612 xi - FREEDOM DiVE')
+    p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     extract_beatmap(p_in_sub, conf_info)
 
     # Assert that the title metadata and background metadata are written correctly
     p_out_song = Path('tests/tmp/extracted/Freedom Dive.mp3')
-    with open('tests/test_extract/173612 xi - FREEDOM DiVE/background desuuu.jpg', 'rb') as file:
+    with open('tests/test_extract/Songs/173612 xi - FREEDOM DiVE/background desuuu.jpg', 'rb') as file:
         f = music_tag.load_file(p_out_song)
         # assert that one of the beatmap ids got written to the title
         assert f['title'].first in ['419485', '420005', '423649', '421369', '480207', '420781', '502132', '473228', '420779']
@@ -134,7 +134,7 @@ def test_only_copy_song():
     shutil.rmtree('tests/tmp', ignore_errors=True)
 
     # Create a copy of the original beatmap
-    p_in_sub = Path('tests/test_extract/173612 xi - FREEDOM DiVE')
+    p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
     p_in_sub_copy = Path('tests/tmp/173612 xi - FREEDOM DiVE no meta')
     shutil.copytree(p_in_sub, p_in_sub_copy, dirs_exist_ok=True)
 
@@ -163,9 +163,26 @@ def test_only_copy_song():
 
 # - bg_export_mode = AS_META_IF_MISSING test
 # - something surronded with angle brackets but is not a valid replacement field
+def test_bg_export_as_meta_if_missing():
+    # Delete tmp directory if it exists
+    shutil.rmtree('tests/tmp', ignore_errors=True)
 
+    # Call extract_beatmap()
+    conf_info = read_conf_file('tests/test_extract/tmp_bg_export_as_meta_if_missing.cfg')
+    p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
+    extract_beatmap(p_in_sub, conf_info)
+
+    # Check that all the metadata is correct
+    p_out_song = Path('tests/tmp/extracted/Freedom Dive.mp3')
+    with open('tests/test_extract/Songs/173612 xi - FREEDOM DiVE/background desuuu.jpg', 'rb') as file:
+        f = music_tag.load_file(p_out_song)
+        assert f['title'].first == r'<oogabooga>'
+        assert f['artwork'].first.data != file.read()
+
+# Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs
+# User has to manually check tests/extracted to see if it's correct
 def test_extract_all_beatmaps():
     shutil.rmtree('tests/extracted', ignore_errors=True)
     conf_info = read_conf_file('tests/test_extract/default.cfg')
     extract_all_beatmaps(conf_info)
-    print("test_extract_all_beatmaps: please manually check tests/extracted to see if it's correct")
+    print("\033[32mtest_extract_all_beatmaps:\033[0m please manually check tests/extracted to see if it's correct")

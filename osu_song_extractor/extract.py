@@ -35,7 +35,7 @@ class BeatmapInfo:
     osu_filename: str = ''
 
     # Looks at .osu file and initializes all the member variables
-    def extract_beatmap_info(self, file: TextIO) -> None:
+    def extract_beatmap_info(self, file: TextIO) -> bool:
         self.osu_filename = file.name
         is_events_section = False
 
@@ -90,6 +90,14 @@ class BeatmapInfo:
                     self.beatmap_id = int(value)
                 case 'BeatmapSetID':
                     self.beatmap_set_id = int(value)
+
+        # Return False if crucial key is missing from .osu file
+        for key, value in asdict(self).items():
+            if not value and key != 'bg_filename' and key != 'bg_ext' and key != 'audio_ext':
+                print(f"\033[33mWarning:\033[0m {self.osu_filename} is missing {key}, skipping")
+                return False
+
+        return True # Return True otherwise
 
     # Replaces the replacement fields in value with the info in beatmap_info
     def parse_replacement_fields(self, value: str) -> str:
@@ -197,15 +205,11 @@ def extract_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
         # Extract the beatmap info from a single .osu file
         beatmap_info = BeatmapInfo()
         with open(osu_file, 'r') as file:
-            beatmap_info.extract_beatmap_info(file)
+            is_valid_beatmap = beatmap_info.extract_beatmap_info(file)
 
-        # Skip beatmap if crucial key is missing from .osu file
-        for key, value in asdict(beatmap_info).items():
-            if not value and key != 'bg_filename' and key != 'bg_ext' and key != 'audio_ext':
-                print(f"\033[33mWarning:\033[0m {beatmap_info.osu_filename} is missing {key}, skipping")
-                continue
-
-        beatmap_set_info.append(beatmap_info) # add to return list
+        # If no crucial fields are missing from .osu file, append to return list
+        if is_valid_beatmap:
+            beatmap_set_info.append(beatmap_info)
 
     return beatmap_set_info
 
@@ -221,7 +225,7 @@ def copy_song(p_in_sub: Path, p_out_deep: Path,
 
     # If source file is not found, print warning and return None to signal that no copy happened
     if not p_in_song.is_file():
-        print(f"\033[33mWarning:\033[0m the audio file from {beatmap_info.osu_filename} was listed but couldn't be found, skipping")
+        print(f"\033[33mWarning:\033[0m the audio file from {beatmap_info.osu_filename} was listed but couldn't be found.")
         return None
 
     # If overwrite_existing_files is True or the destination file doesn't exist, copy
@@ -255,7 +259,7 @@ def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path,
     # If source file is not found, return. If it was also listed in the .osu file, print a warning
     if not p_in_bg.is_file():
         if beatmap_info.bg_filename:
-            print(f"\033[33mWarning:\033[0m the background file from {beatmap_info.osu_filename} was listed but couldn't be found, skipping")
+            print(f"\033[33mWarning:\033[0m the background file from {beatmap_info.osu_filename} was listed but couldn't be found.")
         return
 
     # Export background as metadata if the user wants that
