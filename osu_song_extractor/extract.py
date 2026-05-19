@@ -23,13 +23,11 @@ replacement_field_pat = re.compile(r'<[^\n\r<>]+>')
 
 @dataclass
 class BeatmapInfo:
-    audio_filename: str = '' # does not include extension
-    audio_ext: str = ''
+    audio_filename: str = ''
     title: str = ''
     artist: str = ''
     version: str = ''
-    bg_filename: str = '' # does not include extension
-    bg_ext: str = ''
+    bg_filename: str = ''
     beatmap_id: int = 0
     beatmap_set_id: int = 0
     osu_filename: str = ''
@@ -60,10 +58,9 @@ class BeatmapInfo:
             bg_match = bg_filename_pat.search(line)
             if is_events_section and bg_match:
                 value = bg_match.group(1)
-                # Strips string, replaces apostrophe with underscore, and then separates the
-                # basename and the extension into two different variables.
+                # Strips string and replaces apostrophe with underscore
                 # Why the fuck does an apostrophe get replaced with an underscore here Peppy
-                self.bg_filename, self.bg_ext = parse_filename(parse_string(value).replace("'", "_"))
+                self.bg_filename = parse_string(value).replace("'", "_")
                 continue
 
             # Look pattern "<option>:<value>" in line
@@ -76,10 +73,9 @@ class BeatmapInfo:
             value = conf_match.group(2)
             match option:
                 case 'AudioFilename':
-                    # Strips string, replaces apostrophe with underscore, and then separates the
-                    # basename and the extension into two different variables.
+                    # Strips string and replaces apostrophe with underscore
                     # Why the fuck does an apostrophe get replaced with an underscore here Peppy
-                    self.audio_filename, self.audio_ext = parse_filename(parse_string(value).replace("'", "_"))
+                    self.audio_filename = parse_string(value).replace("'", "_")
                 case 'Title':
                     self.title = value.strip()
                 case 'Artist':
@@ -93,7 +89,7 @@ class BeatmapInfo:
 
         # Return False if crucial key is missing from .osu file
         for key, value in asdict(self).items():
-            if not value and key != 'bg_filename' and key != 'bg_ext' and key != 'audio_ext':
+            if not value and key != 'bg_filename': # and key != 'beatmap_id' and key != 'beatmap_set_id':
                 print(f"\033[33mWarning:\033[0m {self.osu_filename} is missing {key}, skipping")
                 return False
 
@@ -109,7 +105,7 @@ class BeatmapInfo:
     def _replacement_field_callback(self, m: re.Match[str]) -> str:
         match m.group():
             case r'<AudioFilename>':
-                return self.audio_filename
+                return parse_filename(self.audio_filename)[0]
             case r'<Title>':
                 return self.title
             case r'<Artist>':
@@ -117,21 +113,13 @@ class BeatmapInfo:
             case r'<Version>':
                 return self.version
             case r'<BackgroundFilename>':
-                return self.bg_filename
+                return parse_filename(self.bg_filename)[0]
             case r'<BeatmapID>':
                 return str(self.beatmap_id)
             case r'<BeatmapSetID>':
                 return str(self.beatmap_set_id)
     
         return m.group()
-    
-    # Concatenates audio_filename with its extension
-    def full_audio_filename(self) -> str:
-        return fr'{self.audio_filename}.{self.audio_ext}'
-
-    # Concatenates bg_filename with its extension
-    def full_bg_filename(self) -> str:
-        return fr'{self.bg_filename}.{self.bg_ext}'
 
 # Searches all the beatmap folders, creates a corresponding subfolder if
 # export_into_subfolders = True, and calls extract_beatmap to do the rest
@@ -161,9 +149,9 @@ def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
     p_out_sub.mkdir(parents=True, exist_ok=True)
 
     # Count the number of audio files and backgrounds and categorize the beatmap set
-    full_audio_filenames = {beatmap_info.full_audio_filename() for beatmap_info in beatmap_set_info}
-    full_bg_filenames = {beatmap_info.full_bg_filename() for beatmap_info in beatmap_set_info}
-    match (len(full_bg_filenames), len(full_audio_filenames)):
+    audio_filenames = {beatmap_info.audio_filename for beatmap_info in beatmap_set_info}
+    bg_filenames = {beatmap_info.bg_filename for beatmap_info in beatmap_set_info}
+    match (len(bg_filenames), len(audio_filenames)):
         case (1, 1) | (0, 1) | (1, 0) | (0, 0):
             x_bg_x_song_conf_info = conf_info.one_bg_one_song
         case (_, 1):
@@ -187,13 +175,13 @@ def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
 
         # Copy the song to the output folder if it hasn't been copied yet
         p_out_song = None
-        if beatmap_info.full_audio_filename() not in copied_audio:
-            copied_audio.add(beatmap_info.full_audio_filename())
+        if beatmap_info.audio_filename not in copied_audio:
+            copied_audio.add(beatmap_info.audio_filename)
             p_out_song = copy_song(p_in_sub, p_out_deep, beatmap_info, conf_info, x_bg_x_song_conf_info)
 
         # Copy the background to output folder / metadata if it hasn't been copied yet
-        if beatmap_info.full_bg_filename() not in copied_bgs:
-            copied_bgs.add(beatmap_info.full_bg_filename())
+        if beatmap_info.bg_filename not in copied_bgs:
+            copied_bgs.add(beatmap_info.bg_filename)
             copy_bg(p_in_sub, p_out_deep, p_out_song, beatmap_info, conf_info, x_bg_x_song_conf_info)
 
 # Extract the beatmap info from all the .osu files in a directory and return them in a list
@@ -219,8 +207,9 @@ def copy_song(p_in_sub: Path, p_out_deep: Path,
               beatmap_info: BeatmapInfo, conf_info: ConfInfo, x_bg_x_song_conf_info: XBGXSongConfInfo) -> Path:
     # Locate the source and destination paths of song copy process
     out_song = beatmap_info.parse_replacement_fields(x_bg_x_song_conf_info.song_filename) # Parse replacement fields
-    out_song = fr'{conf_info.replace_illegal_chars(out_song)}.{beatmap_info.audio_ext}' # Re-add audio extension
-    p_in_song = Path(fr'{p_in_sub}/{beatmap_info.full_audio_filename()}') # Get source path
+    audio_ext = parse_filename(beatmap_info.audio_filename)[1] # Get audio extension
+    out_song = fr'{conf_info.replace_illegal_chars(out_song)}{audio_ext}' # Re-add audio extension
+    p_in_song = Path(fr'{p_in_sub}/{beatmap_info.audio_filename}') # Get source path
     p_out_song = Path(fr'{p_out_deep}/{out_song}') # Get destination path
 
     # If audio file is not found, attempt to find a file with the same name but doesn't match case.
@@ -262,7 +251,7 @@ def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path | None,
         return
 
     # Locate the background source path
-    p_in_bg = Path(fr'{p_in_sub}/{beatmap_info.full_bg_filename()}') # Get source path
+    p_in_bg = Path(fr'{p_in_sub}/{beatmap_info.bg_filename}') # Get source path
 
     # If background file is not found, attempt to find a file with the same name but doesn't match case.
     # If that fails, print warning and return None to signal that no copy happened
@@ -292,7 +281,8 @@ def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path | None,
     # Export background as separate if the user wants that
     # If overwrite_existing_files is True or the destination file doesn't exist, copy
     out_bg = beatmap_info.parse_replacement_fields(x_bg_x_song_conf_info.bg_filename) # Parse replacement fields
-    out_bg = fr'{conf_info.replace_illegal_chars(out_bg)}.{beatmap_info.bg_ext}' # Re-add image extension
+    bg_ext = parse_filename(beatmap_info.bg_filename)[1] # Get image extension
+    out_bg = fr'{conf_info.replace_illegal_chars(out_bg)}{bg_ext}' # Re-add image extension
     p_out_bg = Path(fr'{p_out_deep}/{out_bg}') # Get destination path
     if not p_out_bg.is_file() or x_bg_x_song_conf_info.overwrite_existing_files:
         shutil.copy2(p_in_bg, p_out_bg)

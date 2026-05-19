@@ -11,12 +11,10 @@ def test_extract_beatmap_set_info():
     beatmap_set_info = extract_beatmap_set_info(p_in_sub)
     assert len(beatmap_set_info) == 9
     for beatmap_info in beatmap_set_info:
-        assert beatmap_info.audio_filename == 'Freedom Dive'
-        assert beatmap_info.audio_ext == 'mp3'
+        assert beatmap_info.audio_filename == 'Freedom Dive.mp3'
         assert beatmap_info.title == 'FREEDOM DiVE'
         assert beatmap_info.artist == 'xi'
-        assert beatmap_info.bg_filename == 'background desuuu'
-        assert beatmap_info.bg_ext == 'jpg'
+        assert beatmap_info.bg_filename == 'background desuuu.jpg'
         assert beatmap_info.beatmap_set_id == 173612
 
     # check that all versions are present
@@ -47,13 +45,11 @@ def test_extract_beatmap_info_missing_bg():
     with open('tests/test_extract/Songs/Missing Background/missing_bg.osu', 'r') as file:
         beatmap_info.extract_beatmap_info(file)
 
-    assert beatmap_info.audio_filename == 'test'
-    assert beatmap_info.audio_ext == ''
-    assert beatmap_info.title == 'FREEDOM DiVE'
-    assert beatmap_info.artist == 'xi'
+    assert beatmap_info.audio_filename == 'test.mp3'
+    assert beatmap_info.title == 'Missing Background'
+    assert beatmap_info.artist == 'ChaosNuggets'
     assert beatmap_info.version == '4K Another'
     assert beatmap_info.bg_filename == ''
-    assert beatmap_info.bg_ext == ''
     assert beatmap_info.beatmap_id == 419485
     assert beatmap_info.beatmap_set_id == 173612
 
@@ -188,9 +184,9 @@ def test_extract_all_invalid_beatmaps():
         assert not path.is_file() # Test that nothing got copied
 
 # Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs
-# User has to manually check tests/extracted to see if it's correct
+# User has to manually check tests/test_extract/Extracted-Songs to see if it's correct
 def test_extract_all_beatmaps():
-    shutil.rmtree('tests/extracted', ignore_errors=True)
+    shutil.rmtree('tests/test_extract/Extracted-Songs', ignore_errors=True)
     conf_info = read_conf_file('tests/test_extract/default.cfg')
     extract_all_beatmaps(conf_info)
-    print("\033[32mtest_extract_all_beatmaps:\033[0m please manually check tests/extracted to see if it's correct")
+    print("\033[32mtest_extract_all_beatmaps:\033[0m please manually check tests/test_extract/Extracted-Songs to see if it's correct")

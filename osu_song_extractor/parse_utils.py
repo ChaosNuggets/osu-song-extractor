@@ -4,8 +4,8 @@ from enum import Enum
 # Looks for something surrounded by quotation marks and puts it into group 1
 string_pat = re.compile(r'"(.*)"')
 
-# Puts the filename without the extension in group 1 and the extension in group 2
-filename_pat = re.compile(r'(.+)\.([^\.]+)$')
+# Puts the filename without the extension in group 1 and the extension (including the dot) in group 2
+filename_pat = re.compile(r'(.+)(\.[^\.]+)$')
 
 # Strips the string of its quotation marks
 def parse_string(value: str) -> str:
@@ -35,7 +35,7 @@ def parse_enum(value: str, EnumCls: type[Enum]) -> Enum:
 
     raise ValueError(f'Cannot parse {value} as {EnumCls}')
 
-# Input full filename and return (basename, extension)
+# Input full filename and return (basename, extension) (including leading dot in extension)
 def parse_filename(value: str) -> tuple[str, str]:
     # Search for something in the form filename.extension
     filename_match = filename_pat.search(value)

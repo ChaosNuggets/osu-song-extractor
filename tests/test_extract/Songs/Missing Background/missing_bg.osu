@@ -1,13 +1,13 @@
 osu file format v13
 
 [General]
-AudioFilename: test
+AudioFilename: test.mp3
 
 [Editor]
 
 [Metadata]
-Title:FREEDOM DiVE
-Artist:xi
+Title:Missing Background
+Artist:ChaosNuggets
 Version:4K Another
 BeatmapID:419485
 BeatmapSetID:173612
