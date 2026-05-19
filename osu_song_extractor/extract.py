@@ -149,14 +149,14 @@ def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
     p_out_sub.mkdir(parents=True, exist_ok=True)
 
     # Count the number of audio files and backgrounds and categorize the beatmap set
-    audio_filenames = {beatmap_info.audio_filename for beatmap_info in beatmap_set_info}
-    bg_filenames = {beatmap_info.bg_filename for beatmap_info in beatmap_set_info}
+    audio_filenames = {beatmap_info.audio_filename for beatmap_info in beatmap_set_info if beatmap_info.audio_filename}
+    bg_filenames = {beatmap_info.bg_filename for beatmap_info in beatmap_set_info if beatmap_info.bg_filename}
     match (len(bg_filenames), len(audio_filenames)):
         case (1, 1) | (0, 1) | (1, 0) | (0, 0):
             x_bg_x_song_conf_info = conf_info.one_bg_one_song
-        case (_, 1):
+        case (_, 1) | (_, 0):
             x_bg_x_song_conf_info = conf_info.mult_bg_one_song
-        case (1, _):
+        case (1, _) | (0, _):
             x_bg_x_song_conf_info = conf_info.one_bg_mult_song
         case (_, _):
             x_bg_x_song_conf_info = conf_info.mult_bg_mult_song
