@@ -5,6 +5,8 @@ The configuration file is called osu-song-extractor.cfg. This is the documentati
 # Table of Contents
 1. [Configuration Options](#configuration-options)
 2. [Replacement Fields](#replacement-fields)
+3. [Comments](#comments)
+4. [Examples](#examples)
 
 # Configuration Options
 There are 5 section headers:
@@ -92,3 +94,13 @@ Some options support replacement fields, which are denoted by angle brackets `<>
 **\<AudioFilename\>, \<Title\>, \<Artist\>, \<Version\>, \<BackgroundFilename\>, \<BeatmapID\>, \<BeatmapSetID\>**
 
 Look online for the .osu file format documentation for more details about what each of these mean. Also, the program automatically strips the extension for folders and adds the correct extension for filenames, so no need to worry about that.
+
+# Comments
+Comments are anything to the right of a `#` character. This is text that the program will ignore. Examples:
+```
+# this is a comment
+
+input_dir="~/Music/Songs" # This is also a comment, and input_dir will still be read correctly
+
+#export_into_subfolders = False # This whole line is a comment, so the program ignores this line
+```

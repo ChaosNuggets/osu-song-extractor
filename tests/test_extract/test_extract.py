@@ -44,10 +44,10 @@ def test_extract_beatmap_set_info():
 def test_extract_beatmap_info_missing_bg():
     # Extract the beatmap info from missing-bg.osu
     beatmap_info = BeatmapInfo()
-    with open('tests/test_extract/missing_bg.osu', 'r') as file:
+    with open('tests/test_extract/Songs/Missing Background/missing_bg.osu', 'r') as file:
         beatmap_info.extract_beatmap_info(file)
 
-    assert beatmap_info.audio_filename == 'Freedom Dive'
+    assert beatmap_info.audio_filename == 'test'
     assert beatmap_info.audio_ext == ''
     assert beatmap_info.title == 'FREEDOM DiVE'
     assert beatmap_info.artist == 'xi'

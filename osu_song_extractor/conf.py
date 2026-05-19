@@ -2,6 +2,7 @@ from dataclasses import dataclass, asdict, field
 import re
 from enum import Enum, auto
 from osu_song_extractor.parse_utils import parse_string, parse_bool, parse_enum
+import os
 
 # Matches with any illegal filename chars
 illegal_pat = re.compile(r'[<>:"\/\\|?*]')
@@ -117,9 +118,9 @@ class ConfInfo:
     def init_general_conf(self, option: str, value: str) -> None:
         match option:
             case 'input_dir':
-                self.input_dir = parse_string(value).rstrip('/\\')
+                self.input_dir = os.path.expanduser(parse_string(value).rstrip('/\\'))
             case 'output_dir':
-                self.output_dir = parse_string(value).rstrip('/\\')
+                self.output_dir = os.path.expanduser(parse_string(value).rstrip('/\\'))
             case 'export_into_subfolders':
                 self.export_into_subfolders = parse_bool(value)
             case 'subfolder_name':

@@ -10,7 +10,7 @@ from typing import TextIO
 # Looks for a configuration option in the form "<option>:<value>", puts
 # option into group 1, and puts value into group 2. This works for 
 # AudioFilename, Title, Artist, Version, BeatmapID, and BeatmapSetID.
-osu_conf_pat = re.compile(r'^(.*):(.*)')
+osu_conf_pat = re.compile(r'^([^\n\r:]*):(.*)')
 
 # Finds section headers in the form [<header>] and puts header in group 1
 osu_section_pat = re.compile(r'^\[(.*)\]')
@@ -223,10 +223,14 @@ def copy_song(p_in_sub: Path, p_out_deep: Path,
     p_in_song = Path(fr'{p_in_sub}/{beatmap_info.full_audio_filename()}') # Get source path
     p_out_song = Path(fr'{p_out_deep}/{out_song}') # Get destination path
 
-    # If source file is not found, print warning and return None to signal that no copy happened
+    # If audio file is not found, attempt to find a file with the same name but doesn't match case.
+    # If that fails, print warning and return None to signal that no copy happened
     if not p_in_song.is_file():
-        print(f"\033[33mWarning:\033[0m the audio file from {beatmap_info.osu_filename} was listed but couldn't be found.")
-        return None
+        p_in_song = find_case_insensitive_file(p_in_sub, p_in_song)
+        if not p_in_song:
+            # If no match, then print a warning and return None
+            print(f"\033[33mWarning:\033[0m the audio file from {beatmap_info.osu_filename} was listed but couldn't be found.")
+            return None
 
     # If overwrite_existing_files is True or the destination file doesn't exist, copy
     if not (x_bg_x_song_conf_info.overwrite_existing_files or not p_out_song.is_file()):
@@ -247,20 +251,26 @@ def copy_song(p_in_sub: Path, p_out_deep: Path,
     return p_out_song # Return path to copied song
 
 # Copy the background to the output folder / metadata
-def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path,
+def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path | None,
             beatmap_info: BeatmapInfo, conf_info: ConfInfo, x_bg_x_song_conf_info: XBGXSongConfInfo) -> None:
     # No need to copy background if bg_export_mode is NEVER
     if x_bg_x_song_conf_info.bg_export_mode == BGExportMode.NEVER:
         return
 
+    # If background wasn't listed in .osu file, return
+    if not beatmap_info.bg_filename:
+        return
+
     # Locate the background source path
     p_in_bg = Path(fr'{p_in_sub}/{beatmap_info.full_bg_filename()}') # Get source path
 
-    # If source file is not found, return. If it was also listed in the .osu file, print a warning
+    # If background file is not found, attempt to find a file with the same name but doesn't match case.
+    # If that fails, print warning and return None to signal that no copy happened
     if not p_in_bg.is_file():
-        if beatmap_info.bg_filename:
+        p_in_bg = find_case_insensitive_file(p_in_sub, p_in_bg)
+        if not p_in_bg:
             print(f"\033[33mWarning:\033[0m the background file from {beatmap_info.osu_filename} was listed but couldn't be found.")
-        return
+            return
 
     # Export background as metadata if the user wants that
     if x_bg_x_song_conf_info.bg_export_mode != BGExportMode.AS_SEPARATE:
@@ -286,3 +296,12 @@ def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path,
     p_out_bg = Path(fr'{p_out_deep}/{out_bg}') # Get destination path
     if not p_out_bg.is_file() or x_bg_x_song_conf_info.overwrite_existing_files:
         shutil.copy2(p_in_bg, p_out_bg)
+
+# WHY DO YOU ALLOW CASE INSENSITIVE FILENAMES IN YOUR .OSU FILE PEPPY WTF
+def find_case_insensitive_file(p_in_sub: Path, p_in_file: Path) -> Path | None:
+    # Look through every path recursively and return the match if found
+    for sub_path in p_in_sub.rglob('*'):
+        if sub_path.is_file() and str(sub_path.resolve()).lower() == str(p_in_file.resolve()).lower():
+            return sub_path
+
+    return None # If no match, return None

@@ -1,15 +1,16 @@
 from osu_song_extractor.conf import read_conf_file, MetaWriteMode, BGExportMode
+import os
 import pytest
 
 def test_normal_cfg():
     conf_values = read_conf_file('tests/test_conf/normal.cfg')
-    assert conf_values.input_dir == '~/Music/Songs'
-    assert conf_values.output_dir == '~/Music/Extracted-Songs'
+    assert conf_values.input_dir == os.path.expanduser('~/Music/Songs')
+    assert conf_values.output_dir == os.path.expanduser('~/Music/Extracted-Songs')
 
 def test_many_spaces_cfg():
     conf_info = read_conf_file('tests/test_conf/many_spaces.cfg')
-    assert conf_info.input_dir == '~/Music/Songs'
-    assert conf_info.output_dir == r'~\Music\Extracted-Songs'
+    assert conf_info.input_dir == os.path.expanduser('~/Music/Songs')
+    assert conf_info.output_dir == os.path.expanduser(r'~\Music\Extracted-Songs')
 
 def test_invalid_general_key_cfg():
     with pytest.raises(KeyError):
