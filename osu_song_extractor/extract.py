@@ -16,7 +16,7 @@ osu_conf_pat = re.compile(r'^([^\n\r:]*):(.*)')
 osu_section_pat = re.compile(r'^\[(.*)\]')
 
 # Finds the background filename and puts it into group 1
-bg_filename_pat = re.compile(r'^0,0,([^,]*),\d+,\d+')
+bg_filename_pat = re.compile(r'^0,0,([^,]*),[-\d]+,[-\d]+')
 
 # Looks for something surrounded by angle brackets
 replacement_field_pat = re.compile(r'<[^\n\r<>]+>')
