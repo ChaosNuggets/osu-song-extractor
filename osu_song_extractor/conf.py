@@ -24,7 +24,7 @@ class BGExportMode(Enum):
 
 # Stores configuration options for a specific type of beatmap. See the "[x_bg_x_song] Options" section in docs/configuration.md for more info.
 @dataclass
-class XBGXSongConfInfo:
+class BeatmapTypeConfInfo:
     export_into_deep_subfolder: bool = False
     deep_subfolder_name: str = r'<Version>'
     overwrite_existing_files: bool = False
@@ -61,11 +61,10 @@ class XBGXSongConfInfo:
 
 # The different sections of the configuration file
 class ConfSection(Enum):
-    GENERAL = auto()
-    ONE_BG_ONE_SONG = auto()
-    MULT_BG_ONE_SONG = auto()
-    ONE_BG_MULT_SONG = auto()
-    MULT_BG_MULT_SONG = auto()
+    GENERAL  = auto()
+    ONE_SONG = auto()
+    RATES    = auto()
+    MAP_PACK = auto()
 
 # Stores all the configuration options. See the "Configuration Options" section in docs/configuration.md for more info.
 @dataclass
@@ -76,43 +75,41 @@ class ConfInfo:
     export_into_subfolders: bool = True
     subfolder_name: str = r'<Artist> - <Title> <BeatmapSetID>'
     illegal_char_override: str = '-'
+    beatmap_type_cutoff: float = 0.7
 
-    # Configuration options for each type of beatmap. 
-    one_bg_one_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
-    mult_bg_one_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
-    one_bg_mult_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
-    mult_bg_mult_song: XBGXSongConfInfo = field(default_factory=XBGXSongConfInfo)
+    # Configuration options for each type of beatmap.
+    one_song: BeatmapTypeConfInfo = field(default_factory=BeatmapTypeConfInfo)
+    rates:    BeatmapTypeConfInfo = field(default_factory=BeatmapTypeConfInfo)
+    map_pack: BeatmapTypeConfInfo = field(default_factory=BeatmapTypeConfInfo)
 
     # Fills in the special defaults for one_bg_mult_song and mult_bg_mult_song
     def __post_init__(self):
-        self.one_bg_mult_song.song_filename = r'<Artist> - <Title> [<Version>]'
-        self.one_bg_mult_song.title_meta = r'<Title> [<Version>]'
+        self.rates.song_filename = r'<Artist> - <Title> [<Version>]'
+        self.rates.title_meta = r'<Title> [<Version>]'
 
-        self.mult_bg_mult_song.export_into_deep_subfolder = True
-        self.mult_bg_mult_song.song_filename = r'<Artist> - <Version>'
-        self.mult_bg_mult_song.title_meta = r'<Version>'
+        self.map_pack.export_into_deep_subfolder = True
+        self.map_pack.song_filename = r'<Artist> - <Version>'
+        self.map_pack.title_meta = r'<Version>'
 
     # Fills in ConfInfo based on the option and value specified
     # in the config file
     def init_from_conf(self, option: str, value: str, section: ConfSection) -> None:
         # Parse section so we modify the correct XBGXSongConfInfo instance
         match section:
-            case ConfSection.ONE_BG_ONE_SONG:
-                x_bg_x_song = self.one_bg_one_song
-            case ConfSection.MULT_BG_ONE_SONG:
-                x_bg_x_song = self.mult_bg_one_song
-            case ConfSection.ONE_BG_MULT_SONG:
-                x_bg_x_song = self.one_bg_mult_song
-            case ConfSection.MULT_BG_MULT_SONG:
-                x_bg_x_song = self.mult_bg_mult_song
+            case ConfSection.ONE_SONG:
+                beatmap_type = self.one_song
+            case ConfSection.RATES:
+                beatmap_type = self.rates
+            case ConfSection.MAP_PACK:
+                beatmap_type = self.map_pack
             case _:
-                x_bg_x_song = None
+                beatmap_type = None
 
         # Call the correct initialization function based on section
-        if x_bg_x_song == None:
+        if beatmap_type == None:
             self.init_general_conf(option, value)
         else:
-            x_bg_x_song.init_from_conf(option, value)
+            beatmap_type.init_from_conf(option, value)
 
     # Parse option and modify the correct member variables for the General section
     def init_general_conf(self, option: str, value: str) -> None:
@@ -126,7 +123,9 @@ class ConfInfo:
             case 'subfolder_name':
                 self.subfolder_name = parse_string(value)
             case 'illegal_char_override':
-                    self.illegal_char_override = parse_string(value)
+                self.illegal_char_override = parse_string(value)
+            case 'beatmap_type_cutoff':
+                self.beatmap_type_cutoff = float(value)
             case _:
                 raise KeyError(fr'Unknown configuration option "{option}" in section [General]')
 

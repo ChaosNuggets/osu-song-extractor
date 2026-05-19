@@ -180,6 +180,7 @@ def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
             p_out_song = copy_song(p_in_sub, p_out_deep, beatmap_info, conf_info, x_bg_x_song_conf_info)
 
         # Copy the background to output folder / metadata if it hasn't been copied yet
+        # TODO: fix this, the user will want multiple exported backgrounds when exporting as metadata
         if beatmap_info.bg_filename not in copied_bgs:
             copied_bgs.add(beatmap_info.bg_filename)
             copy_bg(p_in_sub, p_out_deep, p_out_song, beatmap_info, conf_info, x_bg_x_song_conf_info)
