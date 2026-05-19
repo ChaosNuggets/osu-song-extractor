@@ -68,7 +68,7 @@ def test_custom_cfg():
     assert conf.export_into_subfolders == True
     assert conf.subfolder_name == r"<Artist> - <Title> <BeatmapSetID>"
     assert conf.illegal_char_override == "-"
-    assert conf.beatmap_type_cutoff == 0.7
+    assert conf.beatmap_type_cutoff == 6.7
 
     assert conf.one_song.export_into_deep_subfolder == False
     assert conf.one_song.deep_subfolder_name == r"<Version>"
@@ -102,3 +102,7 @@ def test_invalid_bool_cfg():
 def test_invalid_enum_cfg():
     with pytest.raises(ValueError):
         conf_info = read_conf_file('tests/test_conf/invalid_enum.cfg')
+
+def test_replace_illegal_chars():
+    conf = read_conf_file(r'tests/test_conf/normal.cfg')
+    assert conf.replace_illegal_chars(r'wassup // homie') == r'wassup -- homie'
