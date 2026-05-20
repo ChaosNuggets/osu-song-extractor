@@ -1,14 +1,14 @@
-from osu_song_extractor.extract import extract_beatmap_set_info, BeatmapInfo, extract_all_beatmaps, extract_beatmap
+from osu_song_extractor.extract import read_beatmap_set_info, BeatmapInfo, extract_all_beatmap_sets, extract_beatmap_set
 from osu_song_extractor.conf import read_conf_file
 from pathlib import Path
 import pytest
 import shutil
 import music_tag
 
-def test_extract_beatmap_set_info():
+def test_read_beatmap_set_info():
     # Extract the beatmap infos from the freedom dive beatmap set
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
-    beatmap_set_info = extract_beatmap_set_info(p_in_sub)
+    beatmap_set_info = read_beatmap_set_info(p_in_sub)
     assert len(beatmap_set_info) == 9
     for beatmap_info in beatmap_set_info:
         assert beatmap_info.audio_filename == 'Freedom Dive.mp3'
@@ -39,11 +39,11 @@ def test_extract_beatmap_set_info():
     assert any(beatmap_info.beatmap_id == 473228 for beatmap_info in beatmap_set_info)
     assert any(beatmap_info.beatmap_id == 420779 for beatmap_info in beatmap_set_info)
 
-def test_extract_beatmap_info_missing_bg():
+def test_read_beatmap_info_missing_bg():
     # Extract the beatmap info from missing-bg.osu
     beatmap_info = BeatmapInfo()
     with open('tests/test_extract/Songs/Missing Background/missing_bg.osu', 'r') as file:
-        beatmap_info.extract_beatmap_info(file)
+        beatmap_info.read_beatmap_info(file)
 
     assert beatmap_info.audio_filename == 'test.mp3'
     assert beatmap_info.title == 'Missing Background'
@@ -66,10 +66,10 @@ def test_no_overwrite_existing_files():
     with open('tests/tmp/extracted/xi - FREEDOM DiVE 173612/background desuuu.jpg', 'wb') as file:
         file.write(b'\x48\x65\x6c\x6c\x6f')
 
-    # Call extract_beatmap()
+    # Call extract_beatmap_set()
     conf_info = read_conf_file('tests/test_extract/no_overwrite.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
-    extract_beatmap(p_in_sub, conf_info)
+    extract_beatmap_set(p_in_sub, conf_info)
 
     # Test that both files didn't get overwritten
     with open('tests/tmp/extracted/xi - FREEDOM DiVE 173612/xi - FREEDOM DiVE.mp3', 'rb') as file:
@@ -90,10 +90,10 @@ def test_overwrite_existing_files():
     with open('tests/tmp/extracted/xi - FREEDOM DiVE 173612/background desuuu.jpg', 'wb') as file:
         file.write(b'\x48\x65\x6c\x6c\x6f')
 
-    # Call extract_beatmap()
+    # Call extract_beatmap_set()
     conf_info = read_conf_file('tests/test_extract/overwrite.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
-    extract_beatmap(p_in_sub, conf_info)
+    extract_beatmap_set(p_in_sub, conf_info)
 
     # Test that both files got overwritten
     with open('tests/tmp/extracted/xi - FREEDOM DiVE 173612/xi - FREEDOM DiVE.mp3', 'rb') as file:
@@ -110,10 +110,10 @@ def test_bg_export_as_meta_always():
     # Delete tmp directory if it exists
     shutil.rmtree('tests/tmp', ignore_errors=True)
 
-    # Call extract_beatmap()
+    # Call extract_beatmap_set()
     conf_info = read_conf_file('tests/test_extract/bg_export_as_meta_always.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
-    extract_beatmap(p_in_sub, conf_info)
+    extract_beatmap_set(p_in_sub, conf_info)
 
     # Assert that the title metadata and background metadata are written correctly
     p_out_song = Path('tests/tmp/extracted/Freedom Dive.mp3')
@@ -142,9 +142,9 @@ def test_only_copy_song():
     f.remove_tag('artwork')
     f.save()
 
-    # Call extract_beatmap()
+    # Call extract_beatmap_set()
     conf_info = read_conf_file('tests/test_extract/only_copy_song.cfg')
-    extract_beatmap(p_in_sub_copy, conf_info)
+    extract_beatmap_set(p_in_sub_copy, conf_info)
 
     # Check that all the metadata is untouched
     p_out_song = Path('tests/tmp/extracted/Freedom Dive.mp3')
@@ -163,10 +163,10 @@ def test_bg_export_as_meta_if_missing():
     # Delete tmp directory if it exists
     shutil.rmtree('tests/tmp', ignore_errors=True)
 
-    # Call extract_beatmap()
+    # Call extract_beatmap_set()
     conf_info = read_conf_file('tests/test_extract/bg_export_as_meta_if_missing.cfg')
     p_in_sub = Path('tests/test_extract/Songs/173612 xi - FREEDOM DiVE')
-    extract_beatmap(p_in_sub, conf_info)
+    extract_beatmap_set(p_in_sub, conf_info)
 
     # Check that all the metadata is correct
     p_out_song = Path('tests/tmp/extracted/Freedom Dive.mp3')
@@ -179,14 +179,22 @@ def test_bg_export_as_meta_if_missing():
 def test_extract_all_invalid_beatmaps():
     shutil.rmtree('tests/tmp', ignore_errors=True)
     conf_info = read_conf_file('tests/test_extract/invalid_songs.cfg')
-    extract_all_beatmaps(conf_info)
+    extract_all_beatmap_sets(conf_info)
     for path in Path('tests/tmp/extracted').rglob('*'):
         assert not path.is_file() # Test that nothing got copied
 
-# Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs
-# User has to manually check tests/test_extract/Extracted-Songs to see if it's correct
-def test_extract_all_beatmaps():
-    shutil.rmtree('tests/test_extract/Extracted-Songs', ignore_errors=True)
+# Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs with bg_export_mode = AS_SEPARATE
+# User has to manually check tests/test_extract/Extracted_Songs_As_Separate to see if it's correct
+def test_extract_all_as_separate():
+    shutil.rmtree('tests/test_extract/Extracted_Songs_As_Separate', ignore_errors=True)
     conf_info = read_conf_file('tests/test_extract/default.cfg')
-    extract_all_beatmaps(conf_info)
-    print("\033[32mtest_extract_all_beatmaps:\033[0m please manually check tests/test_extract/Extracted-Songs to see if it's correct")
+    extract_all_beatmap_sets(conf_info)
+    print("\033[32mtest_extract_all_as_separate:\033[0m please manually check tests/test_extract/Extracted_Songs_As_Separate to see if it's correct")
+
+# Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs with bg_export_mode = AS_META_IF_MISSING
+# User has to manually check tests/test_extract/Extracted_Songs_As_Meta to see if it's correct
+def test_extract_all_as_meta():
+    shutil.rmtree('tests/test_extract/Extracted_Songs_As_Meta', ignore_errors=True)
+    conf_info = read_conf_file('tests/test_extract/extract_all_as_meta.cfg')
+    extract_all_beatmap_sets(conf_info)
+    print("\033[32mtest_extract_all_as_meta:\033[0m please manually check tests/test_extract/Extracted_Songs_As_Meta to see if it's correct")

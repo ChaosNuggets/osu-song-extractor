@@ -21,6 +21,7 @@ bg_filename_pat = re.compile(r'^0,0,([^,]*),[-\d]+,[-\d]+')
 # Looks for something surrounded by angle brackets
 replacement_field_pat = re.compile(r'<[^\n\r<>]+>')
 
+# Stores the stuff that we read from each .osu file
 @dataclass
 class BeatmapInfo:
     audio_filename: str = ''
@@ -33,7 +34,7 @@ class BeatmapInfo:
     osu_filename: str = ''
 
     # Looks at .osu file and initializes all the member variables
-    def extract_beatmap_info(self, file: TextIO) -> bool:
+    def read_beatmap_info(self, file: TextIO) -> bool:
         self.osu_filename = file.name
         is_events_section = False
 
@@ -121,9 +122,23 @@ class BeatmapInfo:
     
         return m.group()
 
+# Stores the information we need in order to perform an extraction
+# used by copy_bg(...), copy_song(...), extract_beatmap(...)
+@dataclass
+class ExtractionInfo:
+    p_in: Path
+    p_out: Path
+    beatmap_info: BeatmapInfo
+    conf_info: ConfInfo
+    beatmap_type_conf_info: BeatmapTypeConfInfo
+
+    # astuple(...) function but non-recursive
+    def unpack(self) -> tuple[Path, Path, BeatmapInfo, ConfInfo, BeatmapTypeConfInfo]:
+        return self.p_in, self.p_out, self.beatmap_info, self.conf_info, self.beatmap_type_conf_info
+
 # Searches all the beatmap folders, creates a corresponding subfolder if
-# export_into_subfolders = True, and calls extract_beatmap to do the rest
-def extract_all_beatmaps(conf_info: ConfInfo) -> None:
+# export_into_subfolders = True, and calls extract_beatmap_set to do the rest
+def extract_all_beatmap_sets(conf_info: ConfInfo) -> None:
     # Search each subfolder of the songs folder
     p_in = Path(conf_info.input_dir)
     for p_in_sub in p_in.iterdir():
@@ -131,11 +146,11 @@ def extract_all_beatmaps(conf_info: ConfInfo) -> None:
             continue
 
         # Extract the audio from that beatmap set
-        extract_beatmap(p_in_sub, conf_info)
+        extract_beatmap_set(p_in_sub, conf_info)
 
-def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
+def extract_beatmap_set(p_in_sub: Path, conf_info: ConfInfo) -> None:
     # Extract the beatmap info from all the .osu files in that subfolder
-    beatmap_set_info = extract_beatmap_set_info(p_in_sub)
+    beatmap_set_info = read_beatmap_set_info(p_in_sub)
     if not beatmap_set_info:
         return # Return if no .osu files in folder
 
@@ -160,32 +175,15 @@ def extract_beatmap(p_in_sub: Path, conf_info: ConfInfo) -> None:
     else:
         beatmap_type_conf_info = conf_info.map_pack
 
+    # Iterate through each beatmap's info
     copied_audio: set[str] = set()
     copied_bgs: set[str] = set()
-    # Iterate through each beatmap's info
     for beatmap_info in beatmap_set_info:
-        # Create a deeper subdirectory if beatmap_type_conf_info.export_into_deep_subfolder is True
-        p_out_deep = p_out_sub
-        if beatmap_type_conf_info.export_into_deep_subfolder:
-            deep_sub = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.deep_subfolder_name)
-            deep_sub = conf_info.replace_illegal_chars(deep_sub)
-            p_out_deep = Path(f'{p_out_sub}/{deep_sub}')
-            p_out_deep.mkdir(parents=True, exist_ok=True)
-
-        # Copy the song to the output folder if it hasn't been copied yet
-        p_out_song = None
-        if beatmap_info.audio_filename not in copied_audio:
-            copied_audio.add(beatmap_info.audio_filename)
-            p_out_song = copy_song(p_in_sub, p_out_deep, beatmap_info, conf_info, beatmap_type_conf_info)
-
-        # Copy the background to output folder / metadata if it hasn't been copied yet
-        # TODO: fix this, the user will want multiple exported backgrounds when exporting as metadata
-        if beatmap_info.bg_filename not in copied_bgs:
-            copied_bgs.add(beatmap_info.bg_filename)
-            copy_bg(p_in_sub, p_out_deep, p_out_song, beatmap_info, conf_info, beatmap_type_conf_info)
+        extraction_info = ExtractionInfo(p_in_sub, p_out_sub, beatmap_info, conf_info, beatmap_type_conf_info)
+        extract_beatmap(extraction_info, copied_audio, copied_bgs)
 
 # Extract the beatmap info from all the .osu files in a directory and return them in a list
-def extract_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
+def read_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
     # Iterate through all .osu files
     beatmap_set_info: list[BeatmapInfo] = []
     for osu_file in list(path.glob('*.osu')):
@@ -193,7 +191,7 @@ def extract_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
         # Extract the beatmap info from a single .osu file
         beatmap_info = BeatmapInfo()
         with open(osu_file, 'r') as file:
-            is_valid_beatmap = beatmap_info.extract_beatmap_info(file)
+            is_valid_beatmap = beatmap_info.read_beatmap_info(file)
 
         # If no crucial fields are missing from .osu file, append to return list
         if is_valid_beatmap:
@@ -201,10 +199,48 @@ def extract_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
 
     return beatmap_set_info
 
+# Extracts a single beatmap using extraction_info. copied_audio and copied_bgs
+# are sets of audio filenames and background filenames that have alaready been copied.
+def extract_beatmap(extraction_info: ExtractionInfo, copied_audio: set[str], copied_bgs: set[str]) -> None:
+    # Unpack everything
+    p_in_sub, p_out_sub, beatmap_info, conf_info, beatmap_type_conf_info = extraction_info.unpack()
+
+    # Create a deeper subdirectory if beatmap_type_conf_info.export_into_deep_subfolder is True
+    p_out_deep = p_out_sub
+    if beatmap_type_conf_info.export_into_deep_subfolder:
+        deep_sub = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.deep_subfolder_name)
+        deep_sub = conf_info.replace_illegal_chars(deep_sub)
+        p_out_deep = Path(f'{p_out_sub}/{deep_sub}')
+        p_out_deep.mkdir(parents=True, exist_ok=True)
+
+    # Copy the song to the output folder if it hasn't been copied yet
+    p_out_song = None
+    copy_info = ExtractionInfo(p_in_sub, p_out_deep, beatmap_info, conf_info, beatmap_type_conf_info)
+    if beatmap_info.audio_filename not in copied_audio and beatmap_info.audio_filename:
+        copied_audio.add(beatmap_info.audio_filename)
+        p_out_song = copy_song(copy_info)
+
+    # Copy the background to output folder / metadata if it hasn't been copied yet
+    # If exporting all bgs as separate, proceed if bg wasn't exported
+    # If exporting one bg as meta, proceed if audio file was copied
+    # Unimplemented:
+    # If exporting one bg per audio file as separate, proceed if bg wasn't exported and audio file was copied
+    # If exporting all bgs as meta, proceed if either bg wasn't exported or audio file was copied
+    match (beatmap_type_conf_info.bg_export_mode):
+        case BGExportMode.AS_SEPARATE:
+            if beatmap_info.bg_filename not in copied_bgs and beatmap_info.bg_filename:
+                copied_bgs.add(beatmap_info.bg_filename)
+                copy_bg_as_separate(copy_info)
+        case BGExportMode.AS_META_IF_MISSING | BGExportMode.AS_META_ALWAYS:
+            if p_out_song:
+                copy_bg_as_meta(copy_info, p_out_song)
+
 # Copies the audio file and writes the metadata
 # Returns the path to the copied song
-def copy_song(p_in_sub: Path, p_out_deep: Path,
-              beatmap_info: BeatmapInfo, conf_info: ConfInfo, beatmap_type_conf_info: BeatmapTypeConfInfo) -> Path:
+def copy_song(copy_info: ExtractionInfo) -> Path:
+    # Unpack everything
+    p_in_sub, p_out_deep, beatmap_info, conf_info, beatmap_type_conf_info = copy_info.unpack()
+
     # Locate the source and destination paths of song copy process
     out_song = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.song_filename) # Parse replacement fields
     audio_ext = parse_filename(beatmap_info.audio_filename)[1] # Get audio extension
@@ -232,60 +268,65 @@ def copy_song(p_in_sub: Path, p_out_deep: Path,
 
     # Fill in the title and artist metadata if it's missing or if meta_write_mode is ALWAYS
     f = music_tag.load_file(p_out_song)
-    if not f['title'].value or beatmap_type_conf_info.meta_write_mode == MetaWriteMode.ALWAYS:
+    if not f['title'].values or beatmap_type_conf_info.meta_write_mode == MetaWriteMode.ALWAYS:
         f['title'] = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.title_meta)
-    if not f['artist'].value or beatmap_type_conf_info.meta_write_mode == MetaWriteMode.ALWAYS:
+    if not f['artist'].values or beatmap_type_conf_info.meta_write_mode == MetaWriteMode.ALWAYS:
         f['artist'] = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.artist_meta)
     f.save()
     return p_out_song # Return path to copied song
 
-# Copy the background to the output folder / metadata
-def copy_bg(p_in_sub: Path, p_out_deep: Path, p_out_song: Path | None,
-            beatmap_info: BeatmapInfo, conf_info: ConfInfo, beatmap_type_conf_info: BeatmapTypeConfInfo) -> None:
-    # No need to copy background if bg_export_mode is NEVER
-    if beatmap_type_conf_info.bg_export_mode == BGExportMode.NEVER:
-        return
+# Copies the background as a separate file
+def copy_bg_as_separate(copy_info: ExtractionInfo) -> None:
+    # Unpack everything
+    p_in_sub, p_out_deep, beatmap_info, conf_info, beatmap_type_conf_info = copy_info.unpack()
 
-    # If background wasn't listed in .osu file, return
-    if not beatmap_info.bg_filename:
-        return
-
-    # Locate the background source path
+    # Locate the source and destination paths of background copy process
+    out_bg = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.bg_filename) # Parse replacement fields
+    bg_ext = parse_filename(beatmap_info.bg_filename)[1] # Get image extension
+    out_bg = fr'{conf_info.replace_illegal_chars(out_bg)}{bg_ext}' # Re-add image extension
     p_in_bg = Path(fr'{p_in_sub}/{beatmap_info.bg_filename}') # Get source path
+    p_out_bg = Path(fr'{p_out_deep}/{out_bg}') # Get destination path
 
     # If background file is not found, attempt to find a file with the same name but doesn't match case.
-    # If that fails, print warning and return None to signal that no copy happened
+    # If that fails, print warning and return
     if not p_in_bg.is_file():
         p_in_bg = find_case_insensitive_file(p_in_sub, p_in_bg)
         if not p_in_bg:
             print(f"\033[33mWarning:\033[0m the background file from {beatmap_info.osu_filename} was listed but couldn't be found.")
             return
 
-    # Export background as metadata if the user wants that
-    if beatmap_type_conf_info.bg_export_mode != BGExportMode.AS_SEPARATE:
-        # If audio file was never copied, return
-        if not p_out_song:
-            return
-
-        # If the artwork metadata exists and bg_export_mode is not AS_META_ALWAYS, return
-        f = music_tag.load_file(p_out_song)
-        if not (not f['artwork'].value or beatmap_type_conf_info.bg_export_mode == BGExportMode.AS_META_ALWAYS):
-            return
-
-        # Copy the background as metadata
-        with open(p_in_bg, 'rb') as img_in:
-            f['artwork'] = img_in.read()
-        f.save()
-        return
-
-    # Export background as separate if the user wants that
     # If overwrite_existing_files is True or the destination file doesn't exist, copy
-    out_bg = beatmap_info.parse_replacement_fields(beatmap_type_conf_info.bg_filename) # Parse replacement fields
-    bg_ext = parse_filename(beatmap_info.bg_filename)[1] # Get image extension
-    out_bg = fr'{conf_info.replace_illegal_chars(out_bg)}{bg_ext}' # Re-add image extension
-    p_out_bg = Path(fr'{p_out_deep}/{out_bg}') # Get destination path
     if not p_out_bg.is_file() or beatmap_type_conf_info.overwrite_existing_files:
         shutil.copy2(p_in_bg, p_out_bg)
+
+# Copies the background to the song's metadata
+def copy_bg_as_meta(copy_info: ExtractionInfo, p_out_song: Path) -> None:
+    # Unpack everything
+    p_in_sub, p_out_deep, beatmap_info, conf_info, beatmap_type_conf_info = copy_info.unpack()
+
+    # Locate the source path of background
+    p_in_bg = Path(fr'{p_in_sub}/{beatmap_info.bg_filename}')
+
+    if p_out_song.name == r'DJ Sharpnel - TAKECORE OF YOURSELF [#Marathon] 1625737.mp3':
+        breakpoint()
+
+    # If background file is not found, attempt to find a file with the same name but doesn't match case.
+    # If that fails, print warning and return
+    if not p_in_bg.is_file():
+        p_in_bg = find_case_insensitive_file(p_in_sub, p_in_bg)
+        if not p_in_bg:
+            print(f"\033[33mWarning:\033[0m the background file from {beatmap_info.osu_filename} was listed but couldn't be found.")
+            return
+
+    # If the artwork metadata exists and bg_export_mode is not AS_META_ALWAYS, return
+    f = music_tag.load_file(p_out_song)
+    if not (not f['artwork'].values or beatmap_type_conf_info.bg_export_mode == BGExportMode.AS_META_ALWAYS):
+        return
+
+    # Copy the background as metadata
+    with open(p_in_bg, 'rb') as img_in:
+        f['artwork'] = img_in.read()
+    f.save()
 
 # WHY DO YOU ALLOW CASE INSENSITIVE FILENAMES IN YOUR .OSU FILE PEPPY WTF
 def find_case_insensitive_file(p_in_sub: Path, p_in_file: Path) -> Path | None:

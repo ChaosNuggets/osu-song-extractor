@@ -221,7 +221,8 @@ __marimo__/
 osu_song_extractor.sh
 tests/test.sh
 plan.odt
-tests/test_extract/Extracted-Songs
+tests/test_extract/Extracted_Songs_As_Separate
+tests/test_extract/Extracted_Songs_As_Meta
 tests/tmp
 
 # Ignore all Songs except Missing Background
