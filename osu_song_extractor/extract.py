@@ -6,6 +6,7 @@ from dataclasses import dataclass, astuple, asdict
 from osu_song_extractor.parse_utils import parse_string, parse_filename
 from osu_song_extractor.conf import ConfInfo, BeatmapTypeConfInfo, MetaWriteMode, BGExportMode
 from typing import TextIO
+from collections import deque
 
 # Looks for a configuration option in the form "<option>:<value>", puts
 # option into group 1, and puts value into group 2. This works for 
@@ -182,10 +183,10 @@ def extract_beatmap_set(p_in_sub: Path, conf_info: ConfInfo) -> None:
         extraction_info = ExtractionInfo(p_in_sub, p_out_sub, beatmap_info, conf_info, beatmap_type_conf_info)
         extract_beatmap(extraction_info, copied_audio, copied_bgs)
 
-# Extract the beatmap info from all the .osu files in a directory and return them in a list
-def read_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
+# Extract the beatmap info from all the .osu files in a directory and return them in a deque
+def read_beatmap_set_info(path: Path) -> deque[BeatmapInfo]:
     # Iterate through all .osu files
-    beatmap_set_info: list[BeatmapInfo] = []
+    beatmap_set_info: deque[BeatmapInfo] = deque()
     for osu_file in list(path.glob('*.osu')):
 
         # Extract the beatmap info from a single .osu file
@@ -194,7 +195,15 @@ def read_beatmap_set_info(path: Path) -> list[BeatmapInfo]:
             is_valid_beatmap = beatmap_info.read_beatmap_info(file)
 
         # If no crucial fields are missing from .osu file, append to return list
-        if is_valid_beatmap:
+        if not is_valid_beatmap:
+            continue
+
+        # If the osu file has a background, add it to the front of the list.
+        # Otherwise, add it to the back of the list. This ensures tha tbeatmaps with
+        # backgrounds are prioritized and exporting background as metadata always works.
+        if beatmap_info.bg_filename:
+            beatmap_set_info.appendleft(beatmap_info)
+        else:
             beatmap_set_info.append(beatmap_info)
 
     return beatmap_set_info
