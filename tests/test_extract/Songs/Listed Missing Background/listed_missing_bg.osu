@@ -6,7 +6,7 @@ AudioFilename: test.mp3
 [Editor]
 
 [Metadata]
-Title:Missing Background
+Title:Listed Missing Background
 Artist:ChaosNuggets
 Version:4K Another
 BeatmapID:419485
@@ -16,6 +16,7 @@ BeatmapSetID:173612
 
 [Events]
 //Background and Video events
+0,0,"well hello there.jpg",0,0
 //Break Periods
 //Storyboard Layer 0 (Background)
 //Storyboard Layer 1 (Fail)

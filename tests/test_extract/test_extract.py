@@ -39,14 +39,14 @@ def test_read_beatmap_set_info():
     assert any(beatmap_info.beatmap_id == 473228 for beatmap_info in beatmap_set_info)
     assert any(beatmap_info.beatmap_id == 420779 for beatmap_info in beatmap_set_info)
 
-def test_read_beatmap_info_missing_bg():
+def test_read_beatmap_info_unlisted_bg():
     # Extract the beatmap info from missing-bg.osu
     beatmap_info = BeatmapInfo()
-    with open('tests/test_extract/Songs/Missing Background/missing_bg.osu', 'r') as file:
+    with open('tests/test_extract/Songs/Unlisted Background/unlisted_bg.osu', 'r') as file:
         beatmap_info.read_beatmap_info(file)
 
     assert beatmap_info.audio_filename == 'test.mp3'
-    assert beatmap_info.title == 'Missing Background'
+    assert beatmap_info.title == 'Unlisted Background'
     assert beatmap_info.artist == 'ChaosNuggets'
     assert beatmap_info.version == '4K Another'
     assert beatmap_info.bg_filename == ''

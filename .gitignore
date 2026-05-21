@@ -227,4 +227,5 @@ tests/tmp
 
 # Ignore all Songs except Missing Background
 tests/test_extract/Songs/*
-!tests/test_extract/Songs/Missing Background/
+!tests/test_extract/Songs/Listed Missing Background/
+!tests/test_extract/Songs/Unlisted Background/

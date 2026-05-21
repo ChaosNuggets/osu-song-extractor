@@ -7,6 +7,7 @@ from osu_song_extractor.parse_utils import parse_string, parse_filename
 from osu_song_extractor.conf import ConfInfo, BeatmapTypeConfInfo, MetaWriteMode, BGExportMode
 from typing import TextIO
 from collections import deque
+import os
 
 # Looks for a configuration option in the form "<option>:<value>", puts
 # option into group 1, and puts value into group 2. This works for 
@@ -36,7 +37,7 @@ class BeatmapInfo:
 
     # Looks at .osu file and initializes all the member variables
     def read_beatmap_info(self, file: TextIO) -> bool:
-        self.osu_filename = file.name
+        self.osu_filename = os.path.abspath(file.name)
         is_events_section = False
 
         # Iterate through each line in the .osu file
@@ -229,6 +230,10 @@ def extract_beatmap(extraction_info: ExtractionInfo, copied_audio: set[str], cop
         copied_audio.add(beatmap_info.audio_filename)
         p_out_song = copy_song(copy_info)
 
+    # If no background listed, no need to copy background
+    if not beatmap_info.bg_filename:
+        return
+
     # Copy the background to output folder / metadata if it hasn't been copied yet
     # If exporting all bgs as separate, proceed if bg wasn't exported
     # If exporting one bg as meta, proceed if audio file was copied
@@ -237,7 +242,7 @@ def extract_beatmap(extraction_info: ExtractionInfo, copied_audio: set[str], cop
     # If exporting all bgs as meta, proceed if either bg wasn't exported or audio file was copied
     match (beatmap_type_conf_info.bg_export_mode):
         case BGExportMode.AS_SEPARATE:
-            if beatmap_info.bg_filename not in copied_bgs and beatmap_info.bg_filename:
+            if beatmap_info.bg_filename not in copied_bgs:
                 copied_bgs.add(beatmap_info.bg_filename)
                 copy_bg_as_separate(copy_info)
         case BGExportMode.AS_META_IF_MISSING | BGExportMode.AS_META_ALWAYS:
@@ -316,9 +321,6 @@ def copy_bg_as_meta(copy_info: ExtractionInfo, p_out_song: Path) -> None:
     # Locate the source path of background
     p_in_bg = Path(fr'{p_in_sub}/{beatmap_info.bg_filename}')
 
-    if p_out_song.name == r'DJ Sharpnel - TAKECORE OF YOURSELF [#Marathon] 1625737.mp3':
-        breakpoint()
-
     # If background file is not found, attempt to find a file with the same name but doesn't match case.
     # If that fails, print warning and return
     if not p_in_bg.is_file():
@@ -329,8 +331,11 @@ def copy_bg_as_meta(copy_info: ExtractionInfo, p_out_song: Path) -> None:
 
     # If the artwork metadata exists and bg_export_mode is not AS_META_ALWAYS, return
     f = music_tag.load_file(p_out_song)
-    if not (not f['artwork'].values or beatmap_type_conf_info.bg_export_mode == BGExportMode.AS_META_ALWAYS):
-        return
+    try:
+        if not (not f['artwork'].values or beatmap_type_conf_info.bg_export_mode == BGExportMode.AS_META_ALWAYS):
+            return
+    except KeyError: # I promise this is not a hack this is in the latest unpublished version of music-tag
+       pass
 
     # Copy the background as metadata
     with open(p_in_bg, 'rb') as img_in:
