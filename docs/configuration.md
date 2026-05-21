@@ -1,7 +1,6 @@
 # TODO: ADD EXAMPLES
-# TODO: UPDATE WITH NEW SECTIONS
 # Configuration Guide
-The configuration file is called osu-song-extractor.cfg. This is the documentation for that file.
+The configuration file is called osu-song-extractor.cfg. When you first download this tool, osu-song-extractor.cfg is filled with all the default settings commented out.
 
 # Table of Contents
 1. [Configuration Options](#configuration-options)
@@ -10,13 +9,18 @@ The configuration file is called osu-song-extractor.cfg. This is the documentati
 4. [Examples](#examples)
 
 # Configuration Options
-There are 5 section headers:
+## Section Headers
+There are 4 section headers:
 
-**\[General\], \[one\_bg\_one\_song\], \[mult\_bg\_one\_song\], \[one\_bg\_mult\_song\], \[mult\_bg\_mult\_song\]**
+**\[General\], \[One\_Song\], \[Rates\], \[Map\_Pack\]**
 
-**\[General\]** configurations apply to every beatmap, and one of the four **\[*x*\_bg\_*x*\_song\]** configurations will also apply each beatmap. The beatmaps are categorized based on the number of songs and backgrounds listed in its .osu files.
+**\[General\]** configurations apply to every beatmap set, and one of the three **\[*Beatmap Type*\]** configurations will also apply each beatmap set. The beatmap sets are categorized based on the number of songs and backgrounds listed in its .osu files. The formula is as follows:
 
-The purpose of these headers is to apply different behavior depending on the type of beatmap. For example, beatmaps with one background and multiple songs are probably different rates of the same song, so including `"<Version>"` (the difficulty name) in the exported song's filename / metadata may be useful. Likewise, beatmaps with multiple backgrounds and multiple songs are probably map packs.
+- If a beatmap set has one or fewer songs, it is categorized as **\[One\_Song\]**. [This is an example](https://osu.ppy.sh/beatmapsets/173612#mania/480207).
+- Otherwise, if the number of backgrounds is less than the number of songs \* `beatmap_type_cutoff` (default 0.7), it gets categorized into **\[Rates\]**. [This is an example](https://osu.ppy.sh/beatmapsets/480479#mania/1026063).
+- Otherwise, it gets categorized into **\[Map\_Pack\]**. [This is an example](https://osu.ppy.sh/beatmapsets/1572720#mania/3470136).
+
+The purpose of these headers is to apply different configuration options depending on the type of beatmap set. For example, beatmap sets categorized into **\[Rates\]** probably contain different rates of the same song, so including `"<Version>"` (the difficulty name) in the exported song's filename / metadata may be beneficial.
 
 ## \[General\] Options
 ### input\_dir
@@ -48,10 +52,16 @@ Default: `"<Artist> - <Title> <BeatmapSetID>"`
 Sometimes, the values in the .osu file will have illegal filename characters (`<, >, :, ", /, \, |, ?, *`). If you then use a replacement field, this can lead to illegal folder / file names. What should the illegal character(s) be replaced with? \
 Default: `"-"`
 
-## \[*x*\_bg\_*x*\_song] Options
+### beatmap\_type\_cutoff
+This program attempts to differentiate between beatmap sets that are different rates of the same song, or beatmap sets that are map packs. It does that with the formula described in the [Section Headers section](#section-headers). In that formuala, there is a special configurable variable called `beatmap_type_cutoff`. What should that variable be set to? \
+Default: `0.7`
+
+## \[Beatmap Type\] Options
+These are the options for **\[One\_Song\]**, **\[Rates\]**, and **\[Map\_Pack\]**.
+
 ### export\_into\_deep\_subfolder
 Whether or not to create a deeper subfolder for each audio file. \
-Default: `True` for \[mult\_bg\_mult\_song\], `False` for all other beatmap types
+Default: `True` for **\[map\_pack\]**, `False` for all other beatmap types
 
 ### deep\_subfolder\_name
 What name to give the deeper subfolders if `export_into_deep_subfolder` is `True`. Supports [replacement fields](#replacement-fields). \
@@ -63,7 +73,7 @@ Default: `False`
 
 ### song\_filename
 What name to give the exported song. Supports [replacement fields](#replacement-fields). \
-Default: `"<Artist> - <Title>"` if there's only one song, `"<Artist> - <Title> [<Version>]"` for \[one\_bg\_mult\_song\], `"<Artist> - <Version>"` for \[mult\_bg\_mult\_song\]
+Default: `"<Artist> - <Title>"` for **\[One\_Song\]**, `"<Artist> - <Title> [<Version>]"` for **\[Rates\]**, `"<Artist> - <Version>"` for **\[Map\_Pack\]**
 
 ### meta\_write\_mode
 When to write the output song's title and artist metadata, based on if it's present in the original file. Possible values are `NEVER`, `IF_MISSING`, `ALWAYS`. \
@@ -71,7 +81,7 @@ Default: `IF_MISSING`
 
 ### title\_meta
 What metadata to write to the exported song's title field. Supports [replacement fields](#replacement-fields). \
-Default: `"<Title>"` if there's only one song, `"<Title> [<Version>]"` for \[one\_bg\_mult\_song\], `"<Version>"` for \[mult\_bg\_mult\_song\]
+Default: `"<Title>"` for **\[One\_Song\]**, `"<Title> [<Version>]"` for **\[Rates\]**, `"<Version>"` for **\[Map\_Pack\]**
 
 ### artist\_meta
 What metadata to write to the exported song's artist field. Supports [replacement fields](#replacement-fields). \
@@ -94,7 +104,7 @@ Some options support replacement fields, which are denoted by angle brackets `<>
 
 **\<AudioFilename\>, \<Title\>, \<Artist\>, \<Version\>, \<BackgroundFilename\>, \<BeatmapID\>, \<BeatmapSetID\>**
 
-Look online for the .osu file format documentation for more details about what each of these mean. Also, the program automatically strips the extension for folders and adds the correct extension for filenames, so no need to worry about that.
+Look online for the [.osu file format documentation](https://osu.ppy.sh/wiki/en/Client/File_formats/osu_%28file_format%29) for more details about what each of these mean. Also, the program automatically strips the extension for folders and adds the correct extension for filenames, so no need to worry about that.
 
 # Comments
 Comments are anything to the right of a `#` character. This is text that the program will ignore. Examples:
