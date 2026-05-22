@@ -1,9 +1,11 @@
-# TODO: ADD EXAMPLES
 # Configuration Guide
 The configuration file is called osu-song-extractor.cfg. When you first download this tool, osu-song-extractor.cfg is filled with all the default settings commented out.
 
 # Table of Contents
 1. [Configuration Options](#configuration-options)
+    1. [Section Headers](#section-headers)
+    2. [\[General\] Options](#general-options)
+    3. [\[Beatmap Type\] Options](#beatmap-type-options)
 2. [Replacement Fields](#replacement-fields)
 3. [Comments](#comments)
 4. [Examples](#examples)
@@ -88,11 +90,14 @@ What metadata to write to the exported song's artist field. Supports [replacemen
 Default: `"<Artist>"` 
 
 ### bg\_export\_mode
-How to export the background. \
-`NEVER`: Don't export the background. \
-`AS_SEPARATE`: Export as a separate file in the same directory as the output audio file. \
-`AS_META_IF_MISSING`: Export as part of the output file's metadata only if it's missing from the original audio file. \
-`AS_META_ALWAYS`: Export as part of the output file's metadata even if it already exists in the original audio file. \
+How to export the background(s). \
+`NEVER`: Don't export the background(s). \
+`AS_SEPARATE`: Export all backgrounds as a separate file in the same directory as the output audio file. \
+`AS_META_IF_MISSING`: Export one background as part of the output file's metadata only if it's missing from the original audio file. \
+`AS_META_ALWAYS`: Export one background as part of the output file's metadata even if it already exists in the original audio file.
+
+Note about `AS_META_IF_MISSING` and `AS_META_ALWAYS`: If the same song uses mutliple backgrounds, only one of the backgrounds will be exported as metadata, and which background gets exported is not defined. 
+
 Default: `AS_SEPARATE`
 
 ### bg\_filename
@@ -115,3 +120,42 @@ input_dir="~/Music/Songs" # This is also a comment, and input_dir will still be 
 
 #export_into_subfolders = False # This whole line is a comment, so the program ignores this line
 ```
+
+# Examples
+## Default Options
+If you only fill out input_dir and output_dir in osu\_song\_extractor.cfg, all beatmap sets will be exported into their own subfolder. The subfolders will be formatted as shown below.
+
+![rates.jpg](rates.jpg)
+*Most subfolders look like this.*
+<br><br><br>
+![map_pack.jpg](map_pack.jpg)
+*Map packs get exported with each beatmap in a deeper subfolder.*
+
+## Export Background As Metadata
+The following osu\_song\_extractor.cfg gives no subdirectories, and every song is exported with its background as metadata (excluding audio files that already had artwork in them). I also appended \<BeatmapID\> to the filenames in order to prevent any name clashes, but you can omit this if you want.
+
+*osu\_song\_extractor.cfg*
+```
+[General]
+input_dir = " " # Change this to your songs folder location
+output_dir = " " # Change this to whatever you want your output location to be
+export_into_subfolders = False
+
+[One_Song]
+export_into_deep_subfolder = False
+song_filename = "<Artist> - <Title> <BeatmapID>"
+bg_export_mode = AS_META_IF_MISSING
+
+[Rates]
+export_into_deep_subfolder = False
+song_filename = "<Artist> - <Title> [<Version>] <BeatmapID>"
+bg_export_mode = AS_META_IF_MISSING
+
+[Map_Pack]
+export_into_deep_subfolder = False
+song_filename = "<Artist> - <Version> <BeatmapID>"
+bg_export_mode = AS_META_IF_MISSING
+```
+
+![export_as_meta.jpg](export_as_meta.jpg)
+*Screenshot of output folder.*
