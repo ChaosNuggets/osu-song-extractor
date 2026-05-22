@@ -126,7 +126,7 @@ input_dir="~/Music/Songs" # This is also a comment, and input_dir will still be 
 If you only fill out input_dir and output_dir in osu\_song\_extractor.cfg, all beatmap sets will be exported into their own subfolder. The subfolders will be formatted as shown below.
 
 ![rates.jpg](rates.jpg)
-*Most subfolders look like this.*
+*Most subfolders have a flat layout like this.*
 <br><br><br>
 ![map_pack.jpg](map_pack.jpg)
 *Map packs get exported with each beatmap in a deeper subfolder.*
