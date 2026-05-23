@@ -59,6 +59,13 @@ See [the configuration guide](docs/configuration.md). Tl;dr: see [examples](docs
 # Bugs / Enhancement / Help Requests
 Osu beatmaps are crazy things with lots of edge cases (apostrophes in filenames get replaced with underscores, filenames are case insensitive, etc.). If you find a beatmap or something else that doesn't work with this tool, feel free to submit an issue with the bug tag. Also, if you would like to request more features, feel free to submit an issue with the enhancement tag. If you would like help running this tool, you can add me on discord: chaosnuggets.
 
+# Troubleshooting
+If you're on Windows and getting a FileNotFoundError, this is probably due to Windows' file path limit of 260 characters. There are two ways to fix this:
+
+**Option 1:** [Change your registry settings to enable long paths](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell#registry-setting-to-enable-long-paths).
+
+**Option 2:** Change your configuration settings so your exported filenames have less characters.
+
 # Dev Stuff: Running Tests
 1. Download the [mania freedom dive beatmap](https://osu.ppy.sh/beatmapsets/173612), change the `.osz` extension to `.zip`, and extract it into `tests/test_extract/Songs`.
 2. Activate the virtual environment and install pytest:
