@@ -21,7 +21,9 @@ See [the configuration guide](docs/configuration.md) for more information.
 # Installation
 1. Clone this repository and cd into it (or go to Releases and download the source code). In the terminal or command prompt, run:
 ```sh
-git clone https://github.com/ChaosNuggets/osu-song-extractor.git && cd osu-song-extractor
+git clone https://github.com/ChaosNuggets/osu-song-extractor.git
+
+cd osu-song-extractor
 ```
 2. Create a Python virtual environment:
 ```sh
