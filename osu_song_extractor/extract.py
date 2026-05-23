@@ -190,7 +190,7 @@ def read_beatmap_set_info(path: Path) -> deque[BeatmapInfo]:
 
         # Extract the beatmap info from a single .osu file
         beatmap_info = BeatmapInfo()
-        with open(osu_file, 'r') as file:
+        with open(osu_file, 'r', encoding="utf-8") as file:
             is_valid_beatmap = beatmap_info.read_beatmap_info(file)
 
         # If no crucial fields are missing from .osu file, append to return list
