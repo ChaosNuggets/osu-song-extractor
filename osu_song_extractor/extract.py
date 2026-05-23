@@ -61,9 +61,8 @@ class BeatmapInfo:
             bg_match = bg_filename_pat.search(line)
             if is_events_section and bg_match:
                 value = bg_match.group(1)
-                # Strips string and replaces apostrophe with underscore
-                # Why the fuck does an apostrophe get replaced with an underscore here Peppy
-                self.bg_filename = parse_string(value).replace("'", "_")
+                # Strips string
+                self.bg_filename = parse_string(value)
                 continue
 
             # Look pattern "<option>:<value>" in line
@@ -76,9 +75,8 @@ class BeatmapInfo:
             value = conf_match.group(2)
             match option:
                 case 'AudioFilename':
-                    # Strips string and replaces apostrophe with underscore
-                    # Why the fuck does an apostrophe get replaced with an underscore here Peppy
-                    self.audio_filename = parse_string(value).replace("'", "_")
+                    # Strips string
+                    self.audio_filename = parse_string(value)
                 case 'Title':
                     self.title = value.strip()
                 case 'Artist':
