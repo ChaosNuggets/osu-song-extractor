@@ -25,14 +25,14 @@ class BGExportMode(Enum):
 # Stores configuration options for a specific type of beatmap. See the "[x_bg_x_song] Options" section in docs/configuration.md for more info.
 @dataclass
 class BeatmapTypeConfInfo:
-    export_into_deep_subfolder: bool = False # TODO: CHANGE IN DOCUMENTATION FOR MAP_PACK
+    export_into_deep_subfolder: bool = False
     deep_subfolder_name: str = r'<Version>'
     overwrite_existing_files: bool = False
-    song_filename: str = r'<Artist> - <Title> <BeatmapID>' #TODO: CHANGE DEFAULT IN DOCUMETNATION AND CHANGE TO <AudioFilename> IN EXAMPLE FOR MAP_PACK
+    song_filename: str = r'<Artist> - <Title> <BeatmapID>'
     meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING 
     title_meta: str = r'<Title>'
     artist_meta: str = r'<Artist>'
-    bg_export_mode: BGExportMode = BGExportMode.AS_META_IF_MISSING #TODO: CHANGE IN DOCUMENTATION
+    bg_export_mode: BGExportMode = BGExportMode.AS_META_IF_MISSING
     bg_filename: str = r'<BackgroundFilename>'
 
     # Parse option and modify the correct member variables for the [x_bg_x_song] sections
