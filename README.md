@@ -62,11 +62,15 @@ See [the configuration guide](docs/configuration.md). Tl;dr: see [examples](docs
 Osu beatmaps are crazy things with lots room for customization. If you find a beatmap or something else that doesn't work with this tool, feel free to submit an issue with the bug tag. Also, if you would like to request more features, feel free to submit an issue with the enhancement tag. If you would like help running this tool, you can add me on discord: chaosnuggets.
 
 # Troubleshooting
+## FileNotFoundError on Windows
 If you're on Windows and getting a FileNotFoundError, this is probably due to Windows' file path limit of 260 characters. There are two ways to fix this:
 
 **Option 1:** [Change your registry settings to enable long paths](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell#registry-setting-to-enable-long-paths).
 
 **Option 2:** Change your configuration settings so your exported filenames have less characters.
+
+## Artwork Metadata Not Shown on .ogg Files
+This is more likely than not a limitation of your file explorer / music player. Try opening the file using something compatible with .ogg files like [VLC Media Player](https://www.videolan.org/). Alternatively, you can export the background as a separate file as shown in [this example](docs/configuration.md#export-background-as-separate-and-organize-into-subfolders).
 
 # Dev Stuff: Running Tests
 1. Download the [mania freedom dive beatmap](https://osu.ppy.sh/beatmapsets/173612), change the `.osz` extension to `.zip`, and extract it into `tests/test_extract/Songs`.
