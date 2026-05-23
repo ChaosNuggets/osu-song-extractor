@@ -25,14 +25,14 @@ class BGExportMode(Enum):
 # Stores configuration options for a specific type of beatmap. See the "[x_bg_x_song] Options" section in docs/configuration.md for more info.
 @dataclass
 class BeatmapTypeConfInfo:
-    export_into_deep_subfolder: bool = False
+    export_into_deep_subfolder: bool = False # TODO: CHANGE IN DOCUMENTATION FOR MAP_PACK
     deep_subfolder_name: str = r'<Version>'
     overwrite_existing_files: bool = False
-    song_filename: str = r'<Artist> - <Title>'
+    song_filename: str = r'<Artist> - <Title> <BeatmapID>' #TODO: CHANGE DEFAULT IN DOCUMETNATION AND CHANGE TO <AudioFilename> IN EXAMPLE FOR MAP_PACK
     meta_write_mode: MetaWriteMode = MetaWriteMode.IF_MISSING 
     title_meta: str = r'<Title>'
     artist_meta: str = r'<Artist>'
-    bg_export_mode: BGExportMode = BGExportMode.AS_SEPARATE
+    bg_export_mode: BGExportMode = BGExportMode.AS_META_IF_MISSING #TODO: CHANGE IN DOCUMENTATION
     bg_filename: str = r'<BackgroundFilename>'
 
     # Parse option and modify the correct member variables for the [x_bg_x_song] sections
@@ -72,7 +72,7 @@ class ConfInfo:
     # General configuration options. See the "[General] Options" section in docs/configuration.md for more info.
     input_dir: str = ''
     output_dir: str = ''
-    export_into_subfolders: bool = True
+    export_into_subfolders: bool = False # TODO: CHANGE IN DOCUMENTATION
     subfolder_name: str = r'<Artist> - <Title> <BeatmapSetID>'
     illegal_char_override: str = '-'
     beatmap_type_cutoff: float = 0.7
@@ -82,13 +82,12 @@ class ConfInfo:
     rates:    BeatmapTypeConfInfo = field(default_factory=BeatmapTypeConfInfo)
     map_pack: BeatmapTypeConfInfo = field(default_factory=BeatmapTypeConfInfo)
 
-    # Fills in the special defaults for one_bg_mult_song and mult_bg_mult_song
+    # Fills in the special defaults for rates and map_pack
     def __post_init__(self):
-        self.rates.song_filename = r'<Artist> - <Title> [<Version>]'
+        self.rates.song_filename = r'<Artist> - <Title> [<Version>] <BeatmapID>'
         self.rates.title_meta = r'<Title> [<Version>]'
 
-        self.map_pack.export_into_deep_subfolder = True
-        self.map_pack.song_filename = r'<Artist> - <Version>'
+        self.map_pack.song_filename = r'<Artist> - <Version> <BeatmapID>'
         self.map_pack.title_meta = r'<Version>'
 
     # Fills in ConfInfo based on the option and value specified
