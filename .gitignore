@@ -218,5 +218,14 @@ __marimo__/
 .streamlit/secrets.toml
 
 *.odt#
-osu-song-extractor.sh
+osu_song_extractor.sh
 tests/test.sh
+plan.odt
+tests/test_extract/Extracted_Songs_As_Separate
+tests/test_extract/Extracted_Songs_As_Meta
+tests/tmp
+
+# Ignore all Songs except Missing Background
+tests/test_extract/Songs/*
+!tests/test_extract/Songs/Listed Missing Background/
+!tests/test_extract/Songs/Unlisted Background/
