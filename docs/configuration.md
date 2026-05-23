@@ -79,7 +79,7 @@ Default: `"<Artist> - <Title> <BeatmapID>"` for **\[One\_Song\]**, `"<Artist> - 
 
 ### meta\_write\_mode
 When to write the output song's title and artist metadata, based on if it's present in the original file. Possible values are `NEVER`, `IF_MISSING`, `ALWAYS`. \
-Default: `IF_MISSING`
+Default: `IF_MISSING` for all beatmap types
 
 ### title\_meta
 What metadata to write to the exported song's title field. Supports [replacement fields](#replacement-fields). \
@@ -87,7 +87,7 @@ Default: `"<Title>"` for **\[One\_Song\]**, `"<Title> [<Version>]"` for **\[Rate
 
 ### artist\_meta
 What metadata to write to the exported song's artist field. Supports [replacement fields](#replacement-fields). \
-Default: `"<Artist>"` 
+Default: `"<Artist>"` for all beatmap types
 
 ### bg\_export\_mode
 How to export the background(s). \
@@ -98,11 +98,11 @@ How to export the background(s). \
 
 Note about `AS_META_IF_MISSING` and `AS_META_ALWAYS`: If the same song uses mutliple backgrounds, only one of the backgrounds will be exported as metadata, and which background gets exported is not defined. 
 
-Default: `AS_META_IF_MISSING`
+Default: `AS_META_IF_MISSING` for all beatmap types
 
 ### bg\_filename
 What name to give the exported background image if `bg_export_mode` is `AS_SEPARATE`. Supports [replacement fields](#replacement-fields). \
-Default: `"<BackgroundFilename>"`
+Default: `"<BackgroundFilename>"` for all beatmap types
 
 # Replacement Fields
 Some options support replacement fields, which are denoted by angle brackets `<>`. The following replacement fields are accepted:
