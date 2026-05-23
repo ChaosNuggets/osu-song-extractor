@@ -22,14 +22,14 @@ def test_missing_key_cfg():
 
 def test_default_cfg():
     conf = read_conf_file(r'tests/test_conf/normal.cfg')
-    assert conf.export_into_subfolders == True
+    assert conf.export_into_subfolders == False
     assert conf.subfolder_name == r'<Artist> - <Title> <BeatmapSetID>'
     assert conf.illegal_char_override == r'-'
     assert conf.beatmap_type_cutoff == 0.7
 
     assert conf.one_song.export_into_deep_subfolder == False
     assert conf.rates.export_into_deep_subfolder == False
-    assert conf.map_pack.export_into_deep_subfolder == True
+    assert conf.map_pack.export_into_deep_subfolder == False
 
     assert conf.map_pack.deep_subfolder_name == r'<Version>'
 
@@ -37,9 +37,9 @@ def test_default_cfg():
     assert conf.rates.overwrite_existing_files == False
     assert conf.map_pack.overwrite_existing_files == False
 
-    assert conf.one_song.song_filename == r'<Artist> - <Title>'
-    assert conf.rates.song_filename == r'<Artist> - <Title> [<Version>]'
-    assert conf.map_pack.song_filename == r'<Artist> - <Version>'
+    assert conf.one_song.song_filename == r'<Artist> - <Title> <BeatmapID>'
+    assert conf.rates.song_filename == r'<Artist> - <Title> [<Version>] <BeatmapID>'
+    assert conf.map_pack.song_filename == r'<Artist> - <Version> <BeatmapID>'
 
     assert conf.one_song.meta_write_mode == MetaWriteMode.IF_MISSING 
     assert conf.rates.meta_write_mode == MetaWriteMode.IF_MISSING 
@@ -53,9 +53,9 @@ def test_default_cfg():
     assert conf.rates.artist_meta == r'<Artist>'
     assert conf.map_pack.artist_meta == r'<Artist>'
 
-    assert conf.one_song.bg_export_mode == BGExportMode.AS_SEPARATE
-    assert conf.rates.bg_export_mode == BGExportMode.AS_SEPARATE
-    assert conf.map_pack.bg_export_mode == BGExportMode.AS_SEPARATE
+    assert conf.one_song.bg_export_mode == BGExportMode.AS_META_IF_MISSING
+    assert conf.rates.bg_export_mode == BGExportMode.AS_META_IF_MISSING
+    assert conf.map_pack.bg_export_mode == BGExportMode.AS_META_IF_MISSING
 
     assert conf.one_song.bg_filename == r'<BackgroundFilename>'
     assert conf.rates.bg_filename == r'<BackgroundFilename>'

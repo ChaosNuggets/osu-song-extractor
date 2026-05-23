@@ -53,6 +53,9 @@ def test_read_beatmap_info_unlisted_bg():
     assert beatmap_info.beatmap_id == 419485
     assert beatmap_info.beatmap_set_id == 173612
 
+# - export_into_subfolders = True
+# - bg_export_mode = AS_SEPARATE
+# - song_filename = "<Artist> - <Title>"
 def test_no_overwrite_existing_files():
     # Delete tmp directory if it exists
     shutil.rmtree('tests/tmp', ignore_errors=True)
@@ -77,6 +80,10 @@ def test_no_overwrite_existing_files():
     with open('tests/tmp/extracted/xi - FREEDOM DiVE 173612/background desuuu.jpg', 'rb') as file:
         assert b'\x48\x65\x6c\x6c\x6f' == file.read(5)
 
+# - export_into_subfolders = True
+# - bg_export_mode = AS_SEPARATE
+# - overwrite_existing_files = True
+# - song_filename = "<Artist> - <Title>"
 def test_overwrite_existing_files():
     # Delete tmp directory if it exists
     shutil.rmtree('tests/tmp', ignore_errors=True)
@@ -125,6 +132,7 @@ def test_bg_export_as_meta_always():
 
 # - meta_write_mode = NEVER test
 # - bg_export_mode = NEVER test
+# - song_filename = "<AudioFilename>"
 def test_only_copy_song():
     # Delete tmp directory if it exists
     shutil.rmtree('tests/tmp', ignore_errors=True)
@@ -158,6 +166,7 @@ def test_only_copy_song():
     assert len(list(p_out.glob('*.osu'))) == 0
 
 # - bg_export_mode = AS_META_IF_MISSING test
+# - song_filename = <AudioFilename>
 # - something surronded with angle brackets but is not a valid replacement field
 def test_bg_export_as_meta_if_missing():
     # Delete tmp directory if it exists
@@ -176,7 +185,9 @@ def test_bg_export_as_meta_if_missing():
         assert f['artwork'].first.data != file.read()
 
 # Tests extracting a bunch of invalid osu beatmaps in tests/test_extract/Invalid_Songs
+# export_into_subfolders = True
 def test_extract_all_invalid_beatmaps():
+    print("\n\033[32m========== test_extract_all_invalid_beatmaps: Begin Output ==========\033[0m")
     shutil.rmtree('tests/tmp', ignore_errors=True)
     conf_info = read_conf_file('tests/test_extract/invalid_songs.cfg')
     extract_all_beatmap_sets(conf_info)
@@ -186,14 +197,16 @@ def test_extract_all_invalid_beatmaps():
 # Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs with bg_export_mode = AS_SEPARATE
 # User has to manually check tests/test_extract/Extracted_Songs_As_Separate to see if it's correct
 def test_extract_all_as_separate():
+    print("\n\033[32m========== test_extract_all_as_separate: Begin Output ==========\033[0m")
     shutil.rmtree('tests/test_extract/Extracted_Songs_As_Separate', ignore_errors=True)
-    conf_info = read_conf_file('tests/test_extract/default.cfg')
+    conf_info = read_conf_file('tests/test_extract/extract_all_as_separate.cfg')
     extract_all_beatmap_sets(conf_info)
     print("\033[32mtest_extract_all_as_separate:\033[0m please manually check tests/test_extract/Extracted_Songs_As_Separate to see if it's correct")
 
 # Tests extracting a bunch of real osu beatmaps in tests/test_extract/Songs with bg_export_mode = AS_META_IF_MISSING
 # User has to manually check tests/test_extract/Extracted_Songs_As_Meta to see if it's correct
 def test_extract_all_as_meta():
+    print("\n\033[32m========== test_extract_all_as_meta: Begin Output ==========\033[0m")
     shutil.rmtree('tests/test_extract/Extracted_Songs_As_Meta', ignore_errors=True)
     conf_info = read_conf_file('tests/test_extract/extract_all_as_meta.cfg')
     extract_all_beatmap_sets(conf_info)

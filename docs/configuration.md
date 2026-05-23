@@ -44,7 +44,7 @@ output_dir = "C:\Users\{Username}\Music\Extracted-Songs"
 ### export\_into\_subfolders
 `True`: export each beatmap into a different subfolder \
 `False`: export each beatmap in the top-level output directory \
-Default: `True`
+Default: `False`
 
 ### subfolder\_name
 Name of each subfolder if `export_into_subfolders` is `True`. Supports [replacement fields](#replacement-fields). \
@@ -63,19 +63,19 @@ These are the options for **\[One\_Song\]**, **\[Rates\]**, and **\[Map\_Pack\]*
 
 ### export\_into\_deep\_subfolder
 Whether or not to create a deeper subfolder for each audio file. \
-Default: `True` for **\[map\_pack\]**, `False` for all other beatmap types
+Default: `False` for all beatmap types
 
 ### deep\_subfolder\_name
 What name to give the deeper subfolders if `export_into_deep_subfolder` is `True`. Supports [replacement fields](#replacement-fields). \
-Default: `"<Version>"`
+Default: `"<Version>"` for all beatmap types
 
 ### overwrite\_existing\_files
 Whether or not to overwrite existing files in the output directory with the same filename. Possible values are `True`, `False`. \
-Default: `False`
+Default: `False` for all beatmap types
 
 ### song\_filename
 What name to give the exported song. Supports [replacement fields](#replacement-fields). \
-Default: `"<Artist> - <Title>"` for **\[One\_Song\]**, `"<Artist> - <Title> [<Version>]"` for **\[Rates\]**, `"<Artist> - <Version>"` for **\[Map\_Pack\]**
+Default: `"<Artist> - <Title> <BeatmapID>"` for **\[One\_Song\]**, `"<Artist> - <Title> [<Version>] <BeatmapID>"` for **\[Rates\]**, `"<Artist> - <Version> <BeatmapID>"` for **\[Map\_Pack\]**
 
 ### meta\_write\_mode
 When to write the output song's title and artist metadata, based on if it's present in the original file. Possible values are `NEVER`, `IF_MISSING`, `ALWAYS`. \
@@ -98,7 +98,7 @@ How to export the background(s). \
 
 Note about `AS_META_IF_MISSING` and `AS_META_ALWAYS`: If the same song uses mutliple backgrounds, only one of the backgrounds will be exported as metadata, and which background gets exported is not defined. 
 
-Default: `AS_SEPARATE`
+Default: `AS_META_IF_MISSING`
 
 ### bg\_filename
 What name to give the exported background image if `bg_export_mode` is `AS_SEPARATE`. Supports [replacement fields](#replacement-fields). \
@@ -123,39 +123,39 @@ input_dir="~/Music/Songs" # This is also a comment, and input_dir will still be 
 
 # Examples
 ## Default Options
-If you only fill out input_dir and output_dir in osu\_song\_extractor.cfg, all beatmap sets will be exported into their own subfolder. The subfolders will be formatted as shown below.
+The default options give no subdirectories, and every song is exported with its background as metadata (excluding audio files that already had artwork in them). \<BeatmapID\> is also appended to the filenames in order to prevent any name clashes.
 
-![rates.jpg](rates.jpg)
-*Most subfolders have a flat layout like this.*
-<br><br><br>
-![map_pack.jpg](map_pack.jpg)
-*Map packs get exported with each beatmap in a deeper subfolder.*
+![export_as_meta.jpg](export_as_meta.jpg)
+*Screenshot of output folder.*
 
-## Export Background As Metadata
-The following osu\_song\_extractor.cfg gives no subdirectories, and every song is exported with its background as metadata (excluding audio files that already had artwork in them). I also appended \<BeatmapID\> to the filenames in order to prevent any name clashes, but you can omit this if you want.
+## Export Background as Separate and Organize into Subfolders
+The following osu\_song\_extractor.cfg will export all beatmap sets into their own subfolder. Most subfolders will have a flat layout, while map packs will get exoprted with each beatmap in a deeper subfolder.
 
 *osu\_song\_extractor.cfg*
 ```
 [General]
 input_dir = " " # Change this to your songs folder location
 output_dir = " " # Change this to whatever you want your output location to be
-export_into_subfolders = False
+export_into_subfolders = True
 
 [One_Song]
 export_into_deep_subfolder = False
-song_filename = "<Artist> - <Title> <BeatmapID>"
-bg_export_mode = AS_META_IF_MISSING
+song_filename = "<Artist> - <Title>"
+bg_export_mode = AS_SEPARATE
 
 [Rates]
 export_into_deep_subfolder = False
-song_filename = "<Artist> - <Title> [<Version>] <BeatmapID>"
-bg_export_mode = AS_META_IF_MISSING
+song_filename = "<Artist> - <Title> [<Version>]"
+bg_export_mode = AS_SEPARATE
 
 [Map_Pack]
-export_into_deep_subfolder = False
-song_filename = "<Artist> - <Version> <BeatmapID>"
-bg_export_mode = AS_META_IF_MISSING
+export_into_deep_subfolder = True
+song_filename = "<AudioFilename>"
+bg_export_mode = AS_SEPARATE
 ```
 
-![export_as_meta.jpg](export_as_meta.jpg)
-*Screenshot of output folder.*
+![rates.jpg](rates.jpg)
+*Most subfolders have a flat layout like this.*
+<br><br><br>
+![map_pack.jpg](map_pack.jpg)
+*Map packs get exported with each beatmap in a deeper subfolder.*
